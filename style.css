@@ -1,0 +1,178 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    display: flex;
+    justify-content: center;
+    padding-top: 50px;
+}
+
+.container {
+    width: 420px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+h2 {
+    text-align: center;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+}
+
+#addBtn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#addBtn:hover {
+    opacity: 0.9;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+}
+
+li {
+    background: #f9f9f9;
+    margin-bottom: 10px;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.task-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+small {
+    font-size: 12px;
+    color: gray;
+}
+
+.actions {
+    display: flex;
+    gap: 5px;
+}
+
+button {
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+.done {
+    background: #007bff;
+    color: white;
+}
+
+.undo {
+    background: orange;
+    color: white;
+}
+
+/* ACTION BUTTONS */
+.delete {
+    background: red;
+    color: white;
+}
+
+.edit {
+    background: #6c757d;
+    color: white;
+}
+
+/* DONE TASK STYLE (BONUS UX) */
+.completed-text {
+    text-decoration: line-through;
+    color: green;
+}
+
+/* MODAL BACKGROUND */
+.modal {
+    display: none; /* hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0,0,0,0.5);
+
+    justify-content: center;
+    align-items: center;
+}
+
+/* MODAL BOX */
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    text-align: center;
+    animation: fadeIn 0.2s ease;
+}
+
+/* INPUT INSIDE MODAL */
+.modal-content input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+/* BUTTON GROUP */
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* SAVE BUTTON */
+#saveEdit {
+    background: #28a745;
+    color: white;
+    width: 48%;
+}
+
+#cancelEdit {
+    background: red;
+    color: white;
+    width: 48%;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
