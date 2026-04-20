@@ -15,6 +15,7 @@ include 'auth.php';
 <?php if ($_SESSION['role'] == 'admin'): ?>
     <h3>Admin Panel</h3>
     <a href="create_user.html">Create User</a>
+    <a href="users.html">View Users</a>
 <?php else: ?>
     <h3>Staff Panel</h3>
 <?php endif; ?>

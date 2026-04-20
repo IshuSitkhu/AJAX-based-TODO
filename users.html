@@ -1,0 +1,61 @@
+<h2>User List</h2>
+
+<ul id="userList"></ul>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+$(document).ready(function() {
+    loadUsers();
+});
+
+function loadUsers() {
+    $.ajax({
+        url: "fetch_users.php",
+        method: "GET",
+        dataType: "json",
+        success: function(users) {
+
+            let html = "";
+
+            users.forEach(function(user) {
+                html += `
+                    <li>
+                        ${user.name} (${user.email}) - ${user.role}
+                        <button onclick="deleteUser(${user.id})">Delete</button>
+                    </li>
+                `;
+            });
+
+            $("#userList").html(html);
+        }
+    });
+}
+
+function deleteUser(id) {
+
+    Swal.fire({
+        title: "Are you sure?",
+        text: "User will be deleted",
+        icon: "warning",
+        showCancelButton: true
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            $.post("delete_user.php", { id }, function(res) {
+
+                if (res.status === "success") {
+                    Swal.fire("Deleted", "", "success");
+                    loadUsers();
+                } else {
+                    Swal.fire("Error", res.message, "error");
+                }
+
+            }, "json");
+        }
+
+    });
+}
+</script>
