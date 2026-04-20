@@ -1,8 +1,7 @@
 body {
     font-family: Arial, sans-serif;
     background: #f4f6f9;
-    display: flex;
-    justify-content: center;
+    margin: 0;
     padding-top: 50px;
 }
 
@@ -109,7 +108,6 @@ button:hover {
     color: white;
 }
 
-/* DONE TASK STYLE (BONUS UX) */
 .completed-text {
     text-decoration: line-through;
     color: green;
@@ -117,62 +115,120 @@ button:hover {
 
 /* MODAL BACKGROUND */
 .modal {
-    display: none; /* hidden by default */
+    display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-
-    background: rgba(0,0,0,0.5);
+    inset: 0; /* shorthand for top/left/right/bottom */
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px); 
 
     justify-content: center;
     align-items: center;
+
+    z-index: 1000;
 }
 
 /* MODAL BOX */
 .modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    width: 300px;
+    background: #ffffff;
+    padding: 25px 20px;
+    border-radius: 14px;
+    width: 320px;
     text-align: center;
-    animation: fadeIn 0.2s ease;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+
+    animation: scaleIn 0.25s ease;
 }
 
-/* INPUT INSIDE MODAL */
+/* TITLE */
+.modal-content h3 {
+    margin-bottom: 10px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
 .modal-content input {
     width: 100%;
-    padding: 10px;
-    margin: 10px 0;
+    padding: 12px 14px;
+    margin: 15px 0;
+
+    border-radius: 10px;
+    border: 1px solid #ccc;
+
+    font-size: 14px;
+    outline: none;
+
+    background: #f9fafb;
+
+    transition: all 0.25s ease;
+}
+
+/* FOCUS STATE */
+.modal-content input:focus {
+    background: #ffffff;
+    border-color: #007bff;
+
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
+}
+
+/* PLACEHOLDER STYLE */
+.modal-content input::placeholder {
+    color: #aaa;
+    font-size: 13px;
 }
 
 /* BUTTON GROUP */
 .modal-actions {
     display: flex;
-    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* BUTTON BASE */
+.modal-actions button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 500;
 }
 
 /* SAVE BUTTON */
 #saveEdit {
     background: #28a745;
     color: white;
-    width: 48%;
 }
 
+#saveEdit:hover {
+    background: #218838;
+}
+
+/* CANCEL BUTTON */
 #cancelEdit {
-    background: red;
+    background: #dc3545;
     color: white;
-    width: 48%;
 }
 
-@keyframes fadeIn {
+#cancelEdit:hover {
+    background: #c82333;
+}
+
+/* ANIMATION */
+@keyframes scaleIn {
     from {
         opacity: 0;
-        transform: scale(0.9);
+        transform: scale(0.85);
     }
     to {
         opacity: 1;
         transform: scale(1);
     }
+}
+
+/* LOADER */
+.loader {
+    display: none;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 14px;
+    color: gray;
 }
