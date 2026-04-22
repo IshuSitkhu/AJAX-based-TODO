@@ -1,11 +1,15 @@
 <?php
 include '../auth/auth.php';
+
+if ($_SESSION['role'] != 'admin') {
+    die("Access Denied");
+}
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard</title>
+    <title>Admin Dashboard</title>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -13,40 +17,62 @@ include '../auth/auth.php';
 
 <body>
 
-<h2>Welcome, <?php echo $_SESSION['name']; ?></h2>
+<h2>Welcome Admin: <?php echo $_SESSION['name']; ?></h2>
 
-<!-- LOGOUT BUTTON -->
+<!-- LOGOUT -->
 <button onclick="logout()">Logout</button>
 
 <hr>
 
-<?php if ($_SESSION['role'] == 'admin') { ?>
+<!-- TASK STATS -->
+<h3>Task Overview</h3>
+<div id="stats">Loading stats...</div>
 
-    <h3>Admin Panel</h3>
+<hr>
 
-    <a href="create_user.php">Create User</a><br>
-    <a href="users.php">View Users</a><br>
-    <a href="todo.php">Manage Tasks</a><br>
+<h3>Admin Panel</h3>
 
-<?php } else { ?>
+<button onclick="openCreate()">Create User</button>
+<button onclick="openUsers()">View Users</button>
+<button onclick="openTasks()">Manage Tasks</button>
 
-    <h3>Staff Panel</h3>
+<hr>
 
-    <a href="todo.php">My Tasks</a><br>
+<!-- CREATE USER -->
+<div id="create" class="section" style="display:none;">
+    <h3>Create User</h3>
 
-<?php } ?>
+    <input type="hidden" id="editId">
+
+    <input type="text" id="name" placeholder="Name"><br><br>
+    <input type="email" id="email" placeholder="Email"><br><br>
+    <input type="password" id="password" placeholder="Password"><br><br>
+
+    <button onclick="createUser()">Submit</button>
+</div>
+
+<!-- USERS -->
+<div id="users" class="section" style="display:none;">
+    <h3>Users List</h3>
+    <ul id="userList"></ul>
+</div>
+
+<!-- TASKS -->
+<div id="tasks" class="section" style="display:none;">
+    <h3>All Tasks</h3>
+    <ul id="taskList"></ul>
+</div>
 
 <script>
+// logout
 function logout() {
-    $.ajax({
-        url: "../api/logout.php",
-        method: "GET",
-        success: function () {
-            window.location.href = "login.php";
-        }
+    $.get("../api/logout.php", function () {
+        window.location.href = "login.php";
     });
 }
 </script>
+
+<script src="../assets/js/admin.js"></script>
 
 </body>
 </html>
