@@ -1,6 +1,8 @@
 <?php
-include 'auth.php';
-include 'db.php';
+include '../auth/auth.php';
+include '../config/db.php';
+
+header('Content-Type: application/json');
 
 if ($_SESSION['role'] != 'admin') {
     echo json_encode([]);
