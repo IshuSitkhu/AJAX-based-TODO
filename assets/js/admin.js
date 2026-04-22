@@ -1,10 +1,9 @@
 $(document).ready(function () {
 
     loadStats();
+    loadUsersDropdown();
 
-    // =========================
     // CREATE / UPDATE USER
-    // =========================
     window.createUser = function () {
 
         let id = $("#editId").val();
@@ -52,9 +51,7 @@ $(document).ready(function () {
         });
     };
 
-    // =========================
     // SECTION CONTROL
-    // =========================
     window.openCreate = function () {
         $(".section").hide();
         $("#create").show();
@@ -72,9 +69,8 @@ $(document).ready(function () {
         loadTasks();
     };
 
-    // =========================
     // EDIT USER
-    // =========================
+
     window.editUser = function (id, name, email) {
 
         openCreate();
@@ -86,9 +82,7 @@ $(document).ready(function () {
         $("button[onclick='createUser()']").text("Update User");
     };
 
-    // =========================
     // LOAD USERS
-    // =========================
     function loadUsers() {
 
         $.get("../api/get_all_users.php", function (data) {
@@ -111,9 +105,7 @@ $(document).ready(function () {
         }, "json");
     }
 
-    // =========================
     // DELETE USER
-    // =========================
     window.deleteUser = function (id) {
 
         Swal.fire({
@@ -146,23 +138,94 @@ $(document).ready(function () {
         });
     };
 
-    // =========================
+    // create task
+window.createTask = function () {
+
+    let task = $("#taskText").val().trim();
+    let user_id = $("#assignUser").val();
+
+    if (task === "") {
+        Swal.fire("Error", "Task cannot be empty", "error");
+        return;
+    }
+
+    $.ajax({
+        url: "../api/create_task.php",
+        method: "POST",
+        data: { task, user_id },
+        success: function () {
+
+            Swal.fire("Success", "Task created", "success");
+
+            $("#taskText").val("");
+
+            loadTasks();
+        }
+    });
+};
+
+//delete task
+window.deleteTask = function (id) {
+
+    Swal.fire({
+        title: "Delete task?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        confirmButtonText: "Delete"
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            $.post("../api/delete.php", { id: id }, function () {
+
+                Swal.fire("Deleted", "", "success");
+                loadTasks();
+            });
+        }
+    });
+};
+
+//edit task
+window.editTask = function (id) {
+
+    let newTask = prompt("Enter new task:");
+
+    if (!newTask || newTask.trim() === "") return;
+
+    $.post("../api/update_task.php", {
+        id: id,
+        task: newTask
+    }, function () {
+
+        Swal.fire("Updated", "", "success");
+        loadTasks();
+    });
+};
+
     // LOAD TASKS
-    // =========================
     function loadTasks() {
 
-        $.get("../api/fetch.php", function (data) {
+    $.get("../api/fetch.php", function (data) {
 
-            let html = "";
+        let html = "";
 
-            data.forEach(function (t) {
-                html += `<li>${t.task} (${t.status})</li>`;
-            });
+        data.forEach(function (t) {
 
-            $("#taskList").html(html);
+            html += `
+                <li>
+                    ${t.task} (${t.status})
 
-        }, "json");
-    }
+                    <button onclick="editTask(${t.id}, '${t.task}')">Edit</button>
+                    <button onclick="deleteTask(${t.id})">Delete</button>
+                </li>
+            `;
+        });
+
+        $("#taskList").html(html);
+
+    }, "json");
+}
 
     // =========================
     // LOAD STATS
@@ -177,4 +240,18 @@ $(document).ready(function () {
         }, "json");
     }
 
+    function loadUsersDropdown() {
+
+    $.get("../api/get_all_users.php", function (users) {
+
+        let options = "";
+
+        users.forEach(function (u) {
+            options += `<option value="${u.id}">${u.name}</option>`;
+        });
+
+        $("#assignUser").html(options);
+
+    }, "json");
+}
 });

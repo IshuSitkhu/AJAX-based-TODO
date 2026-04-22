@@ -27,12 +27,13 @@ if ($_SESSION['role'] != 'staff') {
 
 <script>
 function loadMyTasks() {
-    $.get("../api/fetch.php", function(data) {
+
+    $.get("../api/my_tasks.php", function(data) {
 
         let html = "";
 
         data.forEach(t => {
-            html += `<li>${t.task} - ${t.status}</li>`;
+            html += `<li>${t.task} (${t.status}) - Added by ${t.admin_name ? t.admin_name : 'Admin'} </li>`;
         });
 
         $("#myTasks").html(html);

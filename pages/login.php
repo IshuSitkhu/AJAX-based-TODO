@@ -39,7 +39,7 @@ function login() {
         success: function(res) {
 
             if (res.status === "success") {
-                window.location.href = "dashboard.php";
+                window.location.href = res.redirect; // ✅ FIXED
             } else {
                 Swal.fire("Error", res.message, "error");
             }

@@ -59,7 +59,17 @@ if ($_SESSION['role'] != 'admin') {
 
 <!-- TASKS -->
 <div id="tasks" class="section" style="display:none;">
-    <h3>All Tasks</h3>
+    <h3>Manage Tasks</h3>
+
+    <!-- CREATE TASK -->
+    <input type="text" id="taskText" placeholder="Task"><br><br>
+
+    <select id="assignUser"></select><br><br>
+
+    <button onclick="createTask()">Add Task</button>
+
+    <hr>
+
     <ul id="taskList"></ul>
 </div>
 
