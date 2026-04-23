@@ -4,20 +4,34 @@
 <html>
 <head>
     <title>Login</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
-<body>
+<body class="bg-light">
 
-<div class="login-container">
-    <h2>Login</h2>
+<div class="container d-flex justify-content-center align-items-center vh-100">
+    
+    <div class="card shadow p-4" style="width: 380px;">
+        
+        <h3 class="text-center mb-4">Login</h3>
 
-    <input type="email" id="email" placeholder="Email"><br><br>
-    <input type="password" id="password" placeholder="Password"><br><br>
+        <input type="email" id="email" class="form-control mb-3" placeholder="Email">
 
-    <button onclick="login()">Login</button>
+        <input type="password" id="password" class="form-control mb-3" placeholder="Password">
+
+        <button onclick="login()" class="btn btn-primary w-100 mb-2">Login</button>
+
+        <div class="text-center">
+            <small>Dont have an account? 
+                <a href="register.php">Register NOw!!</a>
+            </small>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -39,7 +53,7 @@ function login() {
         success: function(res) {
 
             if (res.status === "success") {
-                window.location.href = res.redirect; // ✅ FIXED
+                window.location.href = res.redirect;
             } else {
                 Swal.fire("Error", res.message, "error");
             }

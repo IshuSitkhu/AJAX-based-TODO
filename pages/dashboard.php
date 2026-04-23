@@ -11,66 +11,70 @@ if ($_SESSION['role'] != 'admin') {
 <head>
     <title>Admin Dashboard</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- jQuery + SweetAlert -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
-<body>
+<body class="bg-light">
 
-<h2>Welcome Admin: <?php echo $_SESSION['name']; ?></h2>
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <span class="navbar-brand">Admin Dashboard</span>
+        <div class="text-white">
+            Welcome, <?php echo $_SESSION['name']; ?>
+            <button onclick="logout()" class="btn btn-danger btn-sm ms-3">Logout</button>
+        </div>
+    </div>
+</nav>
 
-<!-- LOGOUT -->
-<button onclick="logout()">Logout</button>
+<div class="container mt-4">
 
-<hr>
+    <div class="card shadow-sm p-3 mb-4">
+        <h4 class="mb-3">Task Overview</h4>
+        <div id="stats">Loading stats...</div>
+    </div>
 
-<!-- TASK STATS -->
-<h3>Task Overview</h3>
-<div id="stats">Loading stats...</div>
+    <div class="mb-4">
+        <button onclick="openCreate()" class="btn btn-primary me-2">Create User</button>
+        <button onclick="openUsers()" class="btn btn-info me-2 text-white">View Users</button>
+        <button onclick="openTasks()" class="btn btn-success">Manage Tasks</button>
+    </div>
 
-<hr>
+    <div id="create" class="section card p-3 shadow-sm mb-4" style="display:none;">
+        <h4>Create User</h4>
 
-<h3>Admin Panel</h3>
+        <input type="hidden" id="editId">
 
-<button onclick="openCreate()">Create User</button>
-<button onclick="openUsers()">View Users</button>
-<button onclick="openTasks()">Manage Tasks</button>
+        <input type="text" id="name" class="form-control mb-2" placeholder="Name">
+        <input type="email" id="email" class="form-control mb-2" placeholder="Email">
+        <input type="password" id="password" class="form-control mb-3" placeholder="Password">
 
-<hr>
+        <button onclick="createUser()" class="btn btn-primary">Submit</button>
+    </div>
 
-<!-- CREATE USER -->
-<div id="create" class="section" style="display:none;">
-    <h3>Create User</h3>
+    <div id="users" class="section card p-3 shadow-sm mb-4" style="display:none;">
+        <h4>Users List</h4>
+        <ul id="userList" class="list-group"></ul>
+    </div>
 
-    <input type="hidden" id="editId">
+    <div id="tasks" class="section card p-3 shadow-sm mb-4" style="display:none;">
+        <h4>Manage Tasks</h4>
 
-    <input type="text" id="name" placeholder="Name"><br><br>
-    <input type="email" id="email" placeholder="Email"><br><br>
-    <input type="password" id="password" placeholder="Password"><br><br>
+        <!-- CREATE TASK -->
+        <input type="text" id="taskText" class="form-control mb-2" placeholder="Task">
 
-    <button onclick="createUser()">Submit</button>
-</div>
+        <select id="assignUser" class="form-select mb-2"></select>
 
-<!-- USERS -->
-<div id="users" class="section" style="display:none;">
-    <h3>Users List</h3>
-    <ul id="userList"></ul>
-</div>
+        <button onclick="createTask()" class="btn btn-success mb-3">Add Task</button>
 
-<!-- TASKS -->
-<div id="tasks" class="section" style="display:none;">
-    <h3>Manage Tasks</h3>
+        <hr>
 
-    <!-- CREATE TASK -->
-    <input type="text" id="taskText" placeholder="Task"><br><br>
+        <ul id="taskList" class="list-group"></ul>
+    </div>
 
-    <select id="assignUser"></select><br><br>
-
-    <button onclick="createTask()">Add Task</button>
-
-    <hr>
-
-    <ul id="taskList"></ul>
 </div>
 
 <script>

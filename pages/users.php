@@ -11,25 +11,43 @@ if ($_SESSION['role'] != 'admin') {
 <head>
     <title>Users</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
-<body>
+<body class="bg-light">
 
-<h2>User Management</h2>
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <span class="navbar-brand">User Management</span>
+        <a href="dashboard.php" class="btn btn-light btn-sm">Back</a>
+    </div>
+</nav>
 
-<table border="1" width="100%">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-        </tr>
-    </thead>
+<div class="container mt-4">
 
-    <tbody id="userTable"></tbody>
-</table>
+    <div class="card shadow-sm p-3">
+        <h4 class="mb-3">Users List</h4>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+
+                <tbody id="userTable"></tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
 
 <script>
 function loadUsers() {
@@ -43,7 +61,11 @@ function loadUsers() {
                     <td>${user.id}</td>
                     <td>${user.name}</td>
                     <td>${user.email}</td>
-                    <td>${user.role}</td>
+                    <td>
+                        <span class="badge bg-${user.role === 'admin' ? 'danger' : 'primary'}">
+                            ${user.role}
+                        </span>
+                    </td>
                 </tr>
             `;
         });
@@ -54,6 +76,8 @@ function loadUsers() {
 
 loadUsers();
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

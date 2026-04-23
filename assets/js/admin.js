@@ -85,26 +85,44 @@ $(document).ready(function () {
     // LOAD USERS
     function loadUsers() {
 
-        $.get("../api/get_all_users.php", function (data) {
+    $.get("../api/get_all_users.php", function (data) {
 
-            let html = "";
+        let html = "";
 
-            data.forEach(function (u) {
+        data.forEach(function (u) {
 
-                html += `
-                    <li>
-                        ${u.name} - ${u.email} - ${u.role}
-                        <button onclick="editUser(${u.id}, '${u.name}', '${u.email}')">Edit</button>
-                        <button onclick="deleteUser(${u.id})">Delete</button>
-                    </li>
-                `;
-            });
+            html += `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
 
-            $("#userList").html(html);
+                <div>
+                    <strong>${u.name}</strong><br>
+                    <small class="text-muted">${u.email}</small>
+                </div>
 
-        }, "json");
-    }
+                <div>
+                    <span class="badge bg-${u.role === 'admin' ? 'danger' : 'primary'} me-2">
+                        ${u.role}
+                    </span>
 
+                    <button class="btn btn-sm btn-warning me-1"
+                        onclick="editUser(${u.id}, \`${u.name}\`, \`${u.email}\`)">
+                        Edit
+                    </button>
+
+                    <button class="btn btn-sm btn-danger"
+                        onclick="deleteUser(${u.id})">
+                        Delete
+                    </button>
+                </div>
+
+            </li>
+            `;
+        });
+
+        $("#userList").html(html);
+
+    }, "json");
+}
     // DELETE USER
     window.deleteUser = function (id) {
 
@@ -213,12 +231,26 @@ window.editTask = function (id) {
         data.forEach(function (t) {
 
             html += `
-                <li>
-                    ${t.task} (${t.status})
+            <li class="list-group-item d-flex justify-content-between align-items-center">
 
-                    <button onclick="editTask(${t.id}, '${t.task}')">Edit</button>
-                    <button onclick="deleteTask(${t.id})">Delete</button>
-                </li>
+                <div>
+                    <strong>${t.task}</strong><br>
+                    <small class="text-muted">Status: ${t.status}</small>
+                </div>
+
+                <div>
+                    <button class="btn btn-sm btn-warning me-1"
+                        onclick="editTask(${t.id}, \`${t.task}\`)">
+                        Edit
+                    </button>
+
+                    <button class="btn btn-sm btn-danger"
+                        onclick="deleteTask(${t.id})">
+                        Delete
+                    </button>
+                </div>
+
+            </li>
             `;
         });
 
