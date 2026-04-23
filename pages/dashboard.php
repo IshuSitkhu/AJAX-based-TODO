@@ -52,7 +52,7 @@ if ($_SESSION['role'] != 'admin') {
         <input type="email" id="email" class="form-control mb-2" placeholder="Email">
         <input type="password" id="password" class="form-control mb-3" placeholder="Password">
 
-        <button onclick="createUser()" class="btn btn-primary">Submit</button>
+        <button type="button" onclick="createUser()" class="btn btn-primary">Submit</button>
     </div>
 
     <div id="users" class="section card p-3 shadow-sm mb-4" style="display:none;">

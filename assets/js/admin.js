@@ -6,50 +6,74 @@ $(document).ready(function () {
     // CREATE / UPDATE USER
     window.createUser = function () {
 
-        let id = $("#editId").val();
-        let name = $("#name").val().trim();
-        let email = $("#email").val().trim();
-        let password = $("#password").val();
+    let id = $("#editId").val();
+    let name = $("#name").val().trim();
+    let email = $("#email").val().trim();
+    let password = $("#password").val();
 
-        if (name.length < 3) {
-            Swal.fire("Error", "Name must be at least 3 characters", "error");
-            return;
-        }
+    if (name.length < 3) {
+        Swal.fire("Error", "Name must be at least 3 characters", "error");
+        return;
+    }
 
-        let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailPattern.test(email)) {
-            Swal.fire("Error", "Invalid email format", "error");
-            return;
-        }
+    let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+        Swal.fire("Error", "Invalid email format", "error");
+        return;
+    }
 
-        let strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+    let strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
 
-        if (!id && !strongPassword.test(password)) {
-            Swal.fire("Weak Password", "Must include uppercase, lowercase, number, special char", "error");
-            return;
-        }
+    if (!id && !strongPassword.test(password)) {
+        Swal.fire("Weak Password", "Must include uppercase, lowercase, number, special char", "error");
+        return;
+    }
 
-        let url = id ? "../api/update_user.php" : "../api/create_user.php";
+    let url = id ? "../api/update_user.php" : "../api/create_user.php";
 
-        $.ajax({
-            url: url,
-            method: "POST",
-            data: { id, name, email, password },
-            success: function () {
+    let data = { id, name, email };
 
-                Swal.fire("Success", id ? "User updated" : "User created", "success");
+    // only send password if not empty
+    if (password !== "") {
+        data.password = password;
+    }
 
-                $("#editId").val("");
-                $("#name").val("");
-                $("#email").val("");
-                $("#password").val("");
+    $.ajax({
+        url: url,
+        method: "POST",
+        data: data,
 
-                $("button[onclick='createUser()']").text("Submit");
+        success: function (res) {
 
-                loadUsers();
+            try {
+                let response = typeof res === "string" ? JSON.parse(res) : res;
+
+                if (response.status === "success") {
+
+                    Swal.fire("Success", response.message, "success");
+
+                    $("#editId").val("");
+                    $("#name").val("");
+                    $("#email").val("");
+                    $("#password").val("");
+
+                    $("button[onclick='createUser()']").text("Submit");
+
+                    loadUsers();
+                } else {
+                    Swal.fire("Error", response.message, "error");
+                }
+
+            } catch (e) {
+                Swal.fire("Error", "Invalid server response", "error");
             }
-        });
-    };
+        },
+
+        error: function () {
+            Swal.fire("Error", "Server not responding", "error");
+        }
+    });
+};
 
     // SECTION CONTROL
     window.openCreate = function () {
