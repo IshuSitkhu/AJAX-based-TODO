@@ -3,79 +3,82 @@ $(document).ready(function () {
     loadStats();
     loadUsersDropdown();
 
+    // =========================
     // CREATE / UPDATE USER
+    // =========================
     window.createUser = function () {
 
-    let id = $("#editId").val();
-    let name = $("#name").val().trim();
-    let email = $("#email").val().trim();
-    let password = $("#password").val();
+        let id = $("#editId").val();
+        let name = $("#name").val().trim();
+        let email = $("#email").val().trim();
+        let password = $("#password").val();
 
-    if (name.length < 3) {
-        Swal.fire("Error", "Name must be at least 3 characters", "error");
-        return;
-    }
-
-    let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email)) {
-        Swal.fire("Error", "Invalid email format", "error");
-        return;
-    }
-
-    let strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
-
-    if (!id && !strongPassword.test(password)) {
-        Swal.fire("Weak Password", "Must include uppercase, lowercase, number, special char", "error");
-        return;
-    }
-
-    let url = id ? "../api/update_user.php" : "../api/create_user.php";
-
-    let data = { id, name, email };
-
-    // only send password if not empty
-    if (password !== "") {
-        data.password = password;
-    }
-
-    $.ajax({
-        url: url,
-        method: "POST",
-        data: data,
-
-        success: function (res) {
-
-            try {
-                let response = typeof res === "string" ? JSON.parse(res) : res;
-
-                if (response.status === "success") {
-
-                    Swal.fire("Success", response.message, "success");
-
-                    $("#editId").val("");
-                    $("#name").val("");
-                    $("#email").val("");
-                    $("#password").val("");
-
-                    $("button[onclick='createUser()']").text("Submit");
-
-                    loadUsers();
-                } else {
-                    Swal.fire("Error", response.message, "error");
-                }
-
-            } catch (e) {
-                Swal.fire("Error", "Invalid server response", "error");
-            }
-        },
-
-        error: function () {
-            Swal.fire("Error", "Server not responding", "error");
+        if (name.length < 3) {
+            Swal.fire("Error", "Name must be at least 3 characters", "error");
+            return;
         }
-    });
-};
 
+        let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+            Swal.fire("Error", "Invalid email format", "error");
+            return;
+        }
+
+        let strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+
+        if (!id && !strongPassword.test(password)) {
+            Swal.fire("Weak Password", "Must include uppercase, lowercase, number, special char", "error");
+            return;
+        }
+
+        let url = id ? "../api/update_user.php" : "../api/create_user.php";
+
+        let data = { id, name, email };
+
+        if (password !== "") {
+            data.password = password;
+        }
+
+        $.ajax({
+            url: url,
+            method: "POST",
+            data: data,
+
+            success: function (res) {
+
+                try {
+                    let response = typeof res === "string" ? JSON.parse(res) : res;
+
+                    if (response.status === "success") {
+
+                        Swal.fire("Success", response.message, "success");
+
+                        $("#editId").val("");
+                        $("#name").val("");
+                        $("#email").val("");
+                        $("#password").val("");
+
+                        $("button[onclick='createUser()']").text("Submit");
+
+                        loadUsers();
+                    } else {
+                        Swal.fire("Error", response.message, "error");
+                    }
+
+                } catch (e) {
+                    Swal.fire("Error", "Invalid server response", "error");
+                }
+            },
+
+            error: function () {
+                Swal.fire("Error", "Server not responding", "error");
+            }
+        });
+    };
+
+    // =========================
     // SECTION CONTROL
+    // =========================
     window.openCreate = function () {
         $(".section").hide();
         $("#create").show();
@@ -93,8 +96,9 @@ $(document).ready(function () {
         loadTasks();
     };
 
+    // =========================
     // EDIT USER
-
+    // =========================
     window.editUser = function (id, name, email) {
 
         openCreate();
@@ -106,48 +110,53 @@ $(document).ready(function () {
         $("button[onclick='createUser()']").text("Update User");
     };
 
+    // =========================
     // LOAD USERS
+    // =========================
     function loadUsers() {
 
-    $.get("../api/get_all_users.php", function (data) {
+        $.get("../api/get_all_users.php", function (data) {
 
-        let html = "";
+            let html = "";
 
-        data.forEach(function (u) {
+            data.forEach(function (u) {
 
-            html += `
-            <li class="list-group-item d-flex justify-content-between align-items-center">
+                html += `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
 
-                <div>
-                    <strong>${u.name}</strong><br>
-                    <small class="text-muted">${u.email}</small>
-                </div>
+                    <div>
+                        <strong>${u.name}</strong><br>
+                        <small class="text-muted">${u.email}</small>
+                    </div>
 
-                <div>
-                    <span class="badge bg-${u.role === 'admin' ? 'danger' : 'primary'} me-2">
-                        ${u.role}
-                    </span>
+                    <div>
+                        <span class="badge bg-${u.role === 'admin' ? 'danger' : 'primary'} me-2">
+                            ${u.role}
+                        </span>
 
-                    <button class="btn btn-sm btn-warning me-1"
-                        onclick="editUser(${u.id}, \`${u.name}\`, \`${u.email}\`)">
-                        Edit
-                    </button>
+                        <button class="btn btn-sm btn-warning me-1"
+                            onclick="editUser(${u.id}, \`${u.name}\`, \`${u.email}\`)">
+                            Edit
+                        </button>
 
-                    <button class="btn btn-sm btn-danger"
-                        onclick="deleteUser(${u.id})">
-                        Delete
-                    </button>
-                </div>
+                        <button class="btn btn-sm btn-danger"
+                            onclick="deleteUser(${u.id})">
+                            Delete
+                        </button>
+                    </div>
 
-            </li>
-            `;
-        });
+                </li>
+                `;
+            });
 
-        $("#userList").html(html);
+            $("#userList").html(html);
 
-    }, "json");
-}
+        }, "json");
+    }
+
+    // =========================
     // DELETE USER
+    // =========================
     window.deleteUser = function (id) {
 
         Swal.fire({
@@ -180,108 +189,116 @@ $(document).ready(function () {
         });
     };
 
-    // create task
-window.createTask = function () {
+    // =========================
+    // CREATE TASK
+    // =========================
+    window.createTask = function () {
 
-    let task = $("#taskText").val().trim();
-    let user_id = $("#assignUser").val();
+        let task = $("#taskText").val().trim();
+        let user_id = $("#assignUser").val();
 
-    if (task === "") {
-        Swal.fire("Error", "Task cannot be empty", "error");
-        return;
-    }
-
-    $.ajax({
-        url: "../api/create_task.php",
-        method: "POST",
-        data: { task, user_id },
-        success: function () {
-
-            Swal.fire("Success", "Task created", "success");
-
-            $("#taskText").val("");
-
-            loadTasks();
+        if (task === "") {
+            Swal.fire("Error", "Task cannot be empty", "error");
+            return;
         }
-    });
-};
 
-//delete task
-window.deleteTask = function (id) {
+        $.ajax({
+            url: "../api/create_task.php",
+            method: "POST",
+            data: { task, user_id },
+            success: function () {
 
-    Swal.fire({
-        title: "Delete task?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        confirmButtonText: "Delete"
-    }).then((result) => {
+                Swal.fire("Success", "Task created", "success");
 
-        if (result.isConfirmed) {
+                $("#taskText").val("");
 
-            $.post("../api/delete.php", { id: id }, function () {
-
-                Swal.fire("Deleted", "", "success");
                 loadTasks();
-            });
-        }
-    });
-};
+            }
+        });
+    };
 
-//edit task
-window.editTask = function (id) {
+    // =========================
+    // DELETE TASK
+    // =========================
+    window.deleteTask = function (id) {
 
-    let newTask = prompt("Enter new task:");
+        Swal.fire({
+            title: "Delete task?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            confirmButtonText: "Delete"
+        }).then((result) => {
 
-    if (!newTask || newTask.trim() === "") return;
+            if (result.isConfirmed) {
 
-    $.post("../api/update_task.php", {
-        id: id,
-        task: newTask
-    }, function () {
+                $.post("../api/delete.php", { id: id }, function () {
 
-        Swal.fire("Updated", "", "success");
-        loadTasks();
-    });
-};
+                    Swal.fire("Deleted", "", "success");
+                    loadTasks();
+                });
+            }
+        });
+    };
 
+    // =========================
+    // EDIT TASK
+    // =========================
+    window.editTask = function (id) {
+
+        let newTask = prompt("Enter new task:");
+
+        if (!newTask || newTask.trim() === "") return;
+
+        $.post("../api/update_task.php", {
+            id: id,
+            task: newTask
+        }, function () {
+
+            Swal.fire("Updated", "", "success");
+            loadTasks();
+        });
+    };
+
+    // =========================
     // LOAD TASKS
+    // =========================
     function loadTasks() {
 
-    $.get("../api/fetch.php", function (data) {
+        $.get("../api/fetch.php", function (data) {
 
-        let html = "";
+            let html = "";
 
-        data.forEach(function (t) {
+            data.forEach(function (t) {
 
-            html += `
-            <li class="list-group-item d-flex justify-content-between align-items-center">
+                html += `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
 
-                <div>
-                    <strong>${t.task}</strong><br>
-                    <small class="text-muted">Status: ${t.status}</small>
-                </div>
+                    <div>
+                        <strong>${t.task}</strong><br>
+                        <small class="text-muted">Status: ${t.status}</small>
+                    </div>
 
-                <div>
-                    <button class="btn btn-sm btn-warning me-1"
-                        onclick="editTask(${t.id}, \`${t.task}\`)">
-                        Edit
-                    </button>
+                    <div>
+                        <button class="btn btn-sm btn-warning me-1"
+                            onclick="editTask(${t.id})">
+                            Edit
+                        </button>
 
-                    <button class="btn btn-sm btn-danger"
-                        onclick="deleteTask(${t.id})">
-                        Delete
-                    </button>
-                </div>
+                        <button class="btn btn-sm btn-danger"
+                            onclick="deleteTask(${t.id})">
+                            Delete
+                        </button>
+                    </div>
 
-            </li>
-            `;
-        });
+                </li>
+                `;
+            });
 
-        $("#taskList").html(html);
+            $("#taskList").html(html);
 
-    }, "json");
-}
+        }, "json");
+    }
 
     // =========================
     // LOAD STATS
@@ -298,16 +315,179 @@ window.editTask = function (id) {
 
     function loadUsersDropdown() {
 
-    $.get("../api/get_all_users.php", function (users) {
+        $.get("../api/get_all_users.php", function (users) {
 
-        let options = "";
+            let options = "";
 
-        users.forEach(function (u) {
-            options += `<option value="${u.id}">${u.name}</option>`;
-        });
+            users.forEach(function (u) {
+                options += `<option value="${u.id}">${u.name}</option>`;
+            });
 
-        $("#assignUser").html(options);
+            $("#assignUser").html(options);
+
+        }, "json");
+    }
+
+    // =========================
+    // PROJECT SECTION (FIXED FULL)
+    // =========================
+    window.openProjects = function () {
+
+        $(".section").hide();
+        $("#projects").show();
+
+        $("#projectForm").show();
+        $("#projectView").hide();
+
+        loadProjects();
+        loadProjectUsers();
+    };
+
+    function loadProjectUsers() {
+
+        $.get("../api/get_all_users.php", function (users) {
+
+            let options = "";
+
+            users.forEach(function (u) {
+                options += `<option value="${u.id}">${u.name}</option>`;
+            });
+
+            $("#projectUsers").html(options);
+
+        }, "json");
+    }
+
+    window.createProject = function () {
+
+    let title = $("#projectTitle").val().trim();
+    let description = $("#projectDesc").val().trim();
+    let users = $("#projectUsers").val();
+
+    if (title === "") {
+        Swal.fire("Error", "Project title required", "error");
+        return;
+    }
+
+    let url = window.editProjectId
+        ? "../api/update_project.php"
+        : "../api/create_project.php";
+
+    $.ajax({
+        url: url,
+        method: "POST",
+        dataType: "json",   
+        data: {
+            id: window.editProjectId,
+            title: title,
+            description: description,
+            users: users
+        },
+
+        success: function (res) {
+
+            if (res.status === "success") {
+
+                Swal.fire("Success", res.message, "success");
+
+                $("#projectTitle").val("");
+                $("#projectDesc").val("");
+                $("#projectUsers").val([]);
+
+                window.editProjectId = null;
+
+                loadProjects();
+
+            } else {
+                Swal.fire("Error", res.message || "Something went wrong", "error");
+            }
+        },
+
+        error: function (xhr) {
+            console.log(xhr.responseText); 
+            Swal.fire("Error", "Server not responding", "error");
+        }
+    });
+};
+
+    function loadProjects() {
+
+        $.get("../api/get_projects.php", function (data) {
+
+            let html = "";
+
+            data.forEach(function (p) {
+
+                html += `
+                <li class="list-group-item d-flex justify-content-between">
+
+                    <div>
+                        <strong>${p.title}</strong><br>
+                        <small>${p.description}</small>
+                    </div>
+
+                    <div>
+                        <button class="btn btn-sm btn-info me-1"
+                            onclick="viewProject(${p.id})">
+                            View
+                        </button>
+
+                        <button class="btn btn-sm btn-warning me-1"
+                            onclick="editProject(${p.id})">
+                            Edit
+                        </button>
+
+                        <button class="btn btn-sm btn-danger"
+                            onclick="deleteProject(${p.id})">
+                            Delete
+                        </button>
+                    </div>
+
+                </li>
+                `;
+            });
+
+            $("#projectList").html(html);
+
+        }, "json");
+    }
+
+    window.viewProject = function (id) {
+
+    $.get("../api/get_project_details.php?id=" + id, function (data) {
+
+        $("#projectForm").hide();
+        $("#projectList").hide();   
+        $("#projectView").show();
+
+        let users = data.users.map(u => u.name).join(", ");
+        let tasks = data.tasks.map(t => t.task).join(", ");
+
+        $("#projectView").html(`
+            <div class="card p-3">
+
+                <h4>${data.project.title}</h4>
+                <p>${data.project.description}</p>
+
+                <hr>
+
+                <p><b>Assigned Users:</b> ${users}</p>
+                <p><b>Tasks:</b> ${tasks}</p>
+
+                <button class="btn btn-secondary" onclick="backToProjects()">
+                    Back
+                </button>
+
+            </div>
+        `);
 
     }, "json");
-}
+};
+
+    window.backToProjects = function () {
+    $("#projectView").hide();
+    $("#projectForm").show();
+    $("#projectList").show();   
+};
+
 });

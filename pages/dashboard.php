@@ -41,6 +41,7 @@ if ($_SESSION['role'] != 'admin') {
         <button onclick="openCreate()" class="btn btn-primary me-2">Create User</button>
         <button onclick="openUsers()" class="btn btn-info me-2 text-white">View Users</button>
         <button onclick="openTasks()" class="btn btn-success">Manage Tasks</button>
+        <button onclick="openProjects()" class="btn btn-warning text-white">Projects </button>
     </div>
 
     <div id="create" class="section card p-3 shadow-sm mb-4" style="display:none;">
@@ -74,6 +75,30 @@ if ($_SESSION['role'] != 'admin') {
 
         <ul id="taskList" class="list-group"></ul>
     </div>
+
+<div id="projects" class="section card p-3 shadow-sm mb-4" style="display:none;">
+
+    <h4>Projects</h4>
+
+    <!-- CREATE / EDIT FORM -->
+    <div id="projectForm">
+
+        <input type="text" id="projectTitle" class="form-control mb-2" placeholder="Project Title">
+
+        <textarea id="projectDesc" class="form-control mb-2" placeholder="Description"></textarea>
+
+        <button onclick="createProject()" class="btn btn-warning text-white mb-3">
+            Save Project
+        </button>
+
+        <hr>
+    </div>
+
+    <ul id="projectList" class="list-group"></ul>
+
+    <div id="projectView" class="mt-3" style="display:none;"></div>
+
+</div>
 
 </div>
 
