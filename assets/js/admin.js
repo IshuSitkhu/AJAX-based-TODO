@@ -453,8 +453,17 @@ window.viewProject = function (id) {
 
                 <h5>Assigned Users</h5>
                 <ul class="list-group mb-2">
-                    ${(data.users || []).map(u => `<li class="list-group-item">${u.name}</li>`).join("")}
-                </ul>
+    ${(data.users || []).map(u => `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            ${u.name}
+
+            <button class="btn btn-sm btn-danger"
+                onclick="removeUserFromProject(${data.project.id}, ${u.id})">
+                Remove
+            </button>
+        </li>
+    `).join("")}
+</ul>
 
                 <select id="newUser" class="form-select mb-2">
                     <option value="">Select User</option>
@@ -497,10 +506,12 @@ window.viewProject = function (id) {
         window.loadProjectUsersDropdown();
         window.loadTaskUsersDropdown();
 
+        
 
     }).fail(function (err) {
         console.error("API ERROR:", err);
     });
+    
 };
 
 window.loadProjectUsersDropdown = function () {
@@ -545,6 +556,27 @@ window.addUserToProject = function (projectId) {
 
         } else {
             Swal.fire("Error", res.message, "error");
+        }
+
+    }, "json");
+};
+
+window.removeUserFromProject = function(projectId, userId) {
+
+    $.post("../api/remove_user_from_project.php", {
+        project_id: projectId,
+        user_id: userId
+    }, function(res) {
+
+        if (res.status === "success") {
+
+            Swal.fire("Removed", res.message, "success");
+
+            // reload same project view
+            window.viewProject(projectId);
+
+        } else {
+            Swal.fire("Error", "Failed to remove user", "error");
         }
 
     }, "json");
