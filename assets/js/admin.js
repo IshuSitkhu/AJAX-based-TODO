@@ -1,4 +1,5 @@
 console.log("ADMIN JS LOADED");
+window.currentProjectId = null;
 
 $(document).ready(function () {
 
@@ -479,11 +480,39 @@ window.viewProject = function (id) {
                 <h5> Tasks</h5>
 
                 <ul class="list-group mb-2">
-                ${(data.tasks || []).map(t => `<li class="list-group-item">
-                ${t.task} 
-                <small class="text-muted">(${t.status})</small>
-                </li>`).join("")}
-                </ul>
+${(data.tasks || []).map(t => `
+<li class="list-group-item d-flex justify-content-between align-items-center">
+
+    <div>
+        <strong>${t.task}</strong><br>
+        <small class="text-muted">${t.status}</small>
+    </div>
+
+    <div class="d-flex gap-2">
+
+        <!-- STATUS CHANGE -->
+        <select onchange="updateTaskStatus(${t.id}, this.value)" class="form-select form-select-sm">
+            <option value="pending" ${t.status === 'pending' ? 'selected' : ''}>Pending</option>
+            <option value="completed" ${t.status === 'completed' ? 'selected' : ''}>Completed</option>
+        </select>
+
+        <!-- EDIT -->
+        <button class="btn btn-warning btn-sm"
+            onclick="editProjectTask(${t.id}, \`${t.task}\`)">
+            Edit
+        </button>
+
+        <!-- DELETE -->
+        <button class="btn btn-danger btn-sm"
+            onclick="deleteProjectTask(${t.id})">
+            Delete
+        </button>
+
+    </div>
+
+</li>
+`).join("")}
+</ul>
 
                 <input type="text" id="newTask" class="form-control mb-2" placeholder="New Task">
 
@@ -504,14 +533,44 @@ window.viewProject = function (id) {
         `);
 
         window.loadProjectUsersDropdown();
-        window.loadTaskUsersDropdown();
-
+        window.currentProjectId = data.project.id;
+window.loadProjectTaskUsers(window.currentProjectId);
         
 
     }).fail(function (err) {
         console.error("API ERROR:", err);
     });
     
+};
+
+window.loadProjectTaskUsers = function (projectId) {
+
+    if (!projectId) {
+        console.error("Missing projectId");
+        return;
+    }
+
+    $.get("../api/get_project_users.php?project_id=" + projectId, function (users) {
+
+        console.log("Project Users API:", users);
+
+        let options = `<option value="">Assign to User</option>`;
+
+        if (Array.isArray(users) && users.length > 0) {
+
+            users.forEach(u => {
+                options += `<option value="${u.id}">${u.name}</option>`;
+            });
+
+        } else {
+            options += `<option disabled>No users assigned to this project</option>`;
+        }
+
+        $("#assignTaskUser").html(options);
+
+    }, "json").fail(function (err) {
+        console.error("API ERROR:", err);
+    });
 };
 
 window.loadProjectUsersDropdown = function () {
@@ -619,21 +678,83 @@ window.addTaskToProject = function (projectId) {
     }, "json");
 };
 
-window.loadTaskUsersDropdown = function () {
+// window.loadTaskUsersDropdown = function () {
 
-    $.get("../api/get_all_users.php", function (users) {
+//     $.get("../api/get_all_users.php", function (users) {
 
-        let options = `<option value="">Assign to User</option>`;
+//         let options = `<option value="">Assign to User</option>`;
 
-        users.forEach(u => {
+//         users.forEach(u => {
 
-            // skip admin
-            if (u.role === "admin") return;
+//             // skip admin
+//             if (u.role === "admin") return;
 
-            options += `<option value="${u.id}">${u.name}</option>`;
-        });
+//             options += `<option value="${u.id}">${u.name}</option>`;
+//         });
 
-        $("#assignTaskUser").html(options);
+//         $("#assignTaskUser").html(options);
+
+//     }, "json");
+// };
+
+window.editProjectTask = function (id, oldTask) {
+
+    let newTask = prompt("Edit Task:", oldTask);
+
+    if (!newTask || newTask.trim() === "") return;
+
+    $.post("../api/update_project_task.php", {
+        id: id,
+        task: newTask
+    }, function (res) {
+
+        if (res.status === "success") {
+            Swal.fire("Updated", "Task updated", "success");
+
+            // refresh using stored project id
+            window.viewProject(window.currentProjectId);
+        }
+
+    }, "json");
+};
+
+window.deleteProjectTask = function (id) {
+
+    Swal.fire({
+        title: "Delete task?",
+        icon: "warning",
+        showCancelButton: true
+    }).then(result => {
+
+        if (result.isConfirmed) {
+
+            $.post("../api/delete_project_task.php", {
+                id: id
+            }, function (res) {
+
+                if (res.status === "success") {
+                    Swal.fire("Deleted", "", "success");
+
+                    window.viewProject(window.currentProjectId);
+                }
+
+            }, "json");
+        }
+    });
+};
+
+window.updateTaskStatus = function (id, status) {
+
+    $.post("../api/update_task_status.php", {
+        id: id,
+        status: status
+    }, function (res) {
+
+        if (res.status === "success") {
+            Swal.fire("Updated", "Status changed", "success");
+        } else {
+            Swal.fire("Error", "Update failed", "error");
+        }
 
     }, "json");
 };
