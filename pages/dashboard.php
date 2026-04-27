@@ -87,7 +87,8 @@ if ($_SESSION['role'] != 'admin') {
 
         <textarea id="projectDesc" class="form-control mb-2" placeholder="Description"></textarea>
 
-        <button onclick="createProject()" class="btn btn-warning text-white mb-3">
+        
+        <button id="projectBtn" onclick="createProject()" class="btn btn-warning text-white mb-3">
             Save Project
         </button>
 

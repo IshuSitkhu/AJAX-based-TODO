@@ -1,3 +1,5 @@
+console.log("ADMIN JS LOADED");
+
 $(document).ready(function () {
 
     loadStats();
@@ -328,140 +330,121 @@ $(document).ready(function () {
         }, "json");
     }
 
-    // =========================
-    // PROJECT SECTION (FIXED FULL)
-    // =========================
-    window.openProjects = function () {
+// PROJECT SECTION FIXED
 
-        $(".section").hide();
-        $("#projects").show();
+window.openProjects = function () {
+    $(".section").hide();
+    $("#projects").show();
 
-        $("#projectForm").show();
-        $("#projectView").hide();
+    $("#projectForm").show();
+    $("#projectList").show();
+    $("#projectView").hide();
 
-        loadProjects();
-        loadProjectUsers();
-    };
+    window.loadProjects();
+    window.loadProjectUsers();
+};
 
-    function loadProjectUsers() {
+// USERS DROPDOWN
+window.loadProjectUsers = function () {
 
-        $.get("../api/get_all_users.php", function (users) {
+    $.get("../api/get_all_users.php", function (users) {
 
-            let options = "";
+        let options = "";
 
-            users.forEach(function (u) {
-                options += `<option value="${u.id}">${u.name}</option>`;
-            });
+        users.forEach(u => {
+            options += `<option value="${u.id}">${u.name}</option>`;
+        });
 
-            $("#projectUsers").html(options);
+        $("#projectUsers").html(options);
 
-        }, "json");
-    }
+    }, "json");
+};
 
-    window.createProject = function () {
+window.loadProjects = function () {
+
+    $.get("../api/get_projects.php", function (data) {
+
+        let html = "";
+
+        data.forEach(p => {
+
+            html += `
+            <li class="list-group-item d-flex justify-content-between">
+
+                <div>
+                    <strong>${p.title}</strong><br>
+                    <small>${p.description}</small>
+                </div>
+
+                <div>
+                    <button class="btn btn-info btn-sm me-1 viewBtn" data-id="${p.id}">View</button>
+                    <button class="btn btn-warning btn-sm me-1" onclick="window.editProject(${p.id})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="window.deleteProject(${p.id})">Delete</button>
+                </div>
+
+            </li>`;
+        });
+
+        $("#projectList").html(html);
+
+    }, "json");
+};
+
+$(document).on("click", ".viewBtn", function () {
+    let id = $(this).data("id");
+    console.log("Clicked ID:", id);
+    window.viewProject(id);
+});
+
+// CREATE / UPDATE
+window.createProject = function () {
 
     let title = $("#projectTitle").val().trim();
     let description = $("#projectDesc").val().trim();
     let users = $("#projectUsers").val();
 
-    if (title === "") {
-        Swal.fire("Error", "Project title required", "error");
-        return;
-    }
-
     let url = window.editProjectId
         ? "../api/update_project.php"
         : "../api/create_project.php";
 
-    $.ajax({
-        url: url,
-        method: "POST",
-        dataType: "json",   
-        data: {
-            id: window.editProjectId,
-            title: title,
-            description: description,
-            users: users
-        },
+    $.post(url, {
+        id: window.editProjectId,
+        title,
+        description,
+        users
+    }, function (res) {
 
-        success: function (res) {
+        if (res.status === "success") {
 
-            if (res.status === "success") {
+            Swal.fire("Success", res.message, "success");
 
-                Swal.fire("Success", res.message, "success");
+            $("#projectTitle").val("");
+            $("#projectDesc").val("");
+            $("#projectUsers").val([]);
 
-                $("#projectTitle").val("");
-                $("#projectDesc").val("");
-                $("#projectUsers").val([]);
+            window.editProjectId = null;
 
-                window.editProjectId = null;
-
-                loadProjects();
-
-            } else {
-                Swal.fire("Error", res.message || "Something went wrong", "error");
-            }
-        },
-
-        error: function (xhr) {
-            console.log(xhr.responseText); 
-            Swal.fire("Error", "Server not responding", "error");
+            window.loadProjects();
         }
-    });
+
+    }, "json");
 };
 
-    function loadProjects() {
+// VIEW
+window.viewProject = function (id) {
 
-        $.get("../api/get_projects.php", function (data) {
-
-            let html = "";
-
-            data.forEach(function (p) {
-
-                html += `
-                <li class="list-group-item d-flex justify-content-between">
-
-                    <div>
-                        <strong>${p.title}</strong><br>
-                        <small>${p.description}</small>
-                    </div>
-
-                    <div>
-                        <button class="btn btn-sm btn-info me-1"
-                            onclick="viewProject(${p.id})">
-                            View
-                        </button>
-
-                        <button class="btn btn-sm btn-warning me-1"
-                            onclick="editProject(${p.id})">
-                            Edit
-                        </button>
-
-                        <button class="btn btn-sm btn-danger"
-                            onclick="deleteProject(${p.id})">
-                            Delete
-                        </button>
-                    </div>
-
-                </li>
-                `;
-            });
-
-            $("#projectList").html(html);
-
-        }, "json");
-    }
-
-    window.viewProject = function (id) {
+    console.log("View clicked, ID:", id); // 👈 ADD THIS
 
     $.get("../api/get_project_details.php?id=" + id, function (data) {
 
+        console.log("API response:", data); // 👈 ADD THIS
+
         $("#projectForm").hide();
-        $("#projectList").hide();   
+        $("#projectList").hide();
         $("#projectView").show();
 
-        let users = data.users.map(u => u.name).join(", ");
-        let tasks = data.tasks.map(t => t.task).join(", ");
+        let users = data.users.map(u => `<li class="list-group-item">${u.name}</li>`).join("");
+        let tasks = data.tasks.map(t => `<li class="list-group-item">${t.task}</li>`).join("");
 
         $("#projectView").html(`
             <div class="card p-3">
@@ -469,25 +452,66 @@ $(document).ready(function () {
                 <h4>${data.project.title}</h4>
                 <p>${data.project.description}</p>
 
-                <hr>
+                <h5>Users</h5>
+                <ul class="list-group mb-3">${users}</ul>
 
-                <p><b>Assigned Users:</b> ${users}</p>
-                <p><b>Tasks:</b> ${tasks}</p>
+                <h5>Tasks</h5>
+                <ul class="list-group mb-3">${tasks}</ul>
 
-                <button class="btn btn-secondary" onclick="backToProjects()">
-                    Back
-                </button>
+                <button class="btn btn-secondary" onclick="window.backToProjects()">Back</button>
 
             </div>
         `);
 
+    }).fail(function (err) {
+        console.error("API ERROR:", err);
+    });
+};
+
+// EDIT
+window.editProject = function (id) {
+
+    $.get("../api/get_project_details.php?id=" + id, function (data) {
+
+        $("#projectForm").show();
+        $("#projectList").show();
+        $("#projectView").hide();
+
+        $("#projectTitle").val(data.project.title);
+        $("#projectDesc").val(data.project.description);
+
+        let userIds = data.users.map(u => u.id);
+        $("#projectUsers").val(userIds);
+
+        window.editProjectId = id;
+
     }, "json");
 };
 
-    window.backToProjects = function () {
-    $("#projectView").hide();
-    $("#projectForm").show();
-    $("#projectList").show();   
+// DELETE
+window.deleteProject = function (id) {
+
+    Swal.fire({
+        title: "Delete?",
+        icon: "warning",
+        showCancelButton: true
+    }).then(result => {
+
+        if (result.isConfirmed) {
+
+            $.post("../api/delete_project.php", { id }, function () {
+
+                window.loadProjects();
+
+            }, "json");
+        }
+    });
 };
 
+// BACK
+window.backToProjects = function () {
+    $("#projectView").hide();
+    $("#projectForm").show();
+    $("#projectList").show();
+};
 });

@@ -17,10 +17,13 @@ $stmt->bind_param("i", $id);
 
 if ($stmt->execute()) {
 
-    // 2. clean relations (important)
-    $conn->query("DELETE FROM project_users WHERE project_id = $id");
-    $conn->query("DELETE FROM project_tasks WHERE project_id = $id");
+    $stmt2 = $conn->prepare("DELETE FROM project_users WHERE project_id = ?");
+    $stmt2->bind_param("i", $id);
+    $stmt2->execute();
 
+    $stmt3 = $conn->prepare("DELETE FROM project_tasks WHERE project_id = ?");
+    $stmt3->bind_param("i", $id);
+    $stmt3->execute();
     echo json_encode([
         "status" => "success"
     ]);
