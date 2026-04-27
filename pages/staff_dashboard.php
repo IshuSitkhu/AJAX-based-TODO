@@ -13,8 +13,10 @@ if ($_SESSION['role'] != 'staff') {
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="../assets/js/staff.js"></script>
 </head>
 
 <body class="bg-light">
@@ -31,107 +33,72 @@ if ($_SESSION['role'] != 'staff') {
 
 <div class="container mt-4">
 
-    <div class="card shadow-sm p-3 mb-4">
-        <h4 class="mb-3">Add Task</h4>
-
-        <div class="d-flex gap-2">
-            <input type="text" id="taskInput" class="form-control" placeholder="Enter task">
-            <button onclick="addTask()" class="btn btn-success">Add</button>
-        </div>
-    </div>
-
     <div class="card shadow-sm p-3">
-        <h4 class="mb-3">My Tasks</h4>
+        <h4 class="mb-3">My Project Tasks</h4>
 
-        <ul id="myTasks" class="list-group"></ul>
+        <ul id="taskList" class="list-group"></ul>
     </div>
 
 </div>
 
 <script>
+// =========================
+// LOAD PROJECT TASKS
+// =========================
 function loadMyTasks() {
 
-    $.get("../api/my_tasks.php", function(data) {
+    $.get("../api/staff_project_tasks.php", function(data) {
 
         let html = "";
 
-        data.forEach(t => {
-            html += `<li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                    <strong>${t.task}</strong><br>
-                    <small class="text-muted">
-                        Added by ${t.admin_name ? t.admin_name : 'Admin'}
-                    </small>
-                </div>
-                <span class="badge bg-info text-dark">${t.status}</span>
-            </li>`;
-        });
+        if (data.length === 0) {
+            html = `<li class="list-group-item text-muted">No tasks assigned</li>`;
+        } else {
 
-        $("#myTasks").html(html);
+            data.forEach(t => {
+
+    html += `
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+
+        <div>
+            <strong>${t.task}</strong><br>
+            <small class="text-muted">
+                Project: ${t.project_name}
+            </small>
+        </div>
+
+        <div>
+            <span class="badge bg-${t.status === 'completed' ? 'success' : 'warning'}">
+                ${t.status}
+            </span>
+
+            ${t.status !== 'completed' ? `
+                <button class="btn btn-sm btn-success ms-2"
+                    onclick="markCompleted(${t.id})">
+                    Done
+                </button>
+            ` : ''}
+        </div>
+
+    </li>`;
+});
+        }
+
+        $("#taskList").html(html);
 
     }, "json");
 }
 
+// load on page start
 loadMyTasks();
 
+// =========================
+// LOGOUT
+// =========================
 function logout() {
     $.get("../api/logout.php", function() {
         window.location.href = "login.php";
     });
-}
-
-function addTask() {
-
-    let task = $("#taskInput").val().trim();
-
-    if (task === "") {
-        Swal.fire("Error", "Task cannot be empty", "error");
-        return;
-    }
-
-    $.ajax({
-        url: "../api/create_task.php",
-        method: "POST",
-        data: { task: task },
-        dataType: "json",
-        success: function(res) {
-
-            if (res.status === "success") {
-
-                $("#taskInput").val("");
-                loadMyTasks();
-
-                Swal.fire("Success", "Task added", "success");
-
-            } else {
-                Swal.fire("Error", "Failed to add task", "error");
-            }
-        }
-    });
-}
-
-// (keeping your second function as-is)
-function loadMyTasks() {
-
-    $.get("../api/my_tasks.php", function(data) {
-
-        let html = "";
-
-        data.forEach(t => {
-            html += `<li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                    <strong>${t.task}</strong><br>
-                    <small class="text-muted">
-                        Added by ${t.admin_name ? t.admin_name : 'System'}
-                    </small>
-                </div>
-                <span class="badge bg-info text-dark">${t.status}</span>
-            </li>`;
-        });
-
-        $("#myTasks").html(html);
-
-    }, "json");
 }
 </script>
 

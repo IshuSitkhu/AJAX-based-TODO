@@ -433,18 +433,15 @@ window.createProject = function () {
 // VIEW
 window.viewProject = function (id) {
 
-    console.log("View clicked, ID:", id); // 👈 ADD THIS
+    console.log("View clicked, ID:", id);
 
     $.get("../api/get_project_details.php?id=" + id, function (data) {
 
-        console.log("API response:", data); // 👈 ADD THIS
+        console.log("API response:", data);
 
         $("#projectForm").hide();
         $("#projectList").hide();
         $("#projectView").show();
-
-        let users = data.users.map(u => `<li class="list-group-item">${u.name}</li>`).join("");
-        let tasks = data.tasks.map(t => `<li class="list-group-item">${t.task}</li>`).join("");
 
         $("#projectView").html(`
             <div class="card p-3">
@@ -452,20 +449,161 @@ window.viewProject = function (id) {
                 <h4>${data.project.title}</h4>
                 <p>${data.project.description}</p>
 
-                <h5>Users</h5>
-                <ul class="list-group mb-3">${users}</ul>
+                <hr>
 
-                <h5>Tasks</h5>
-                <ul class="list-group mb-3">${tasks}</ul>
+                <h5>Assigned Users</h5>
+                <ul class="list-group mb-2">
+                    ${(data.users || []).map(u => `<li class="list-group-item">${u.name}</li>`).join("")}
+                </ul>
+
+                <select id="newUser" class="form-select mb-2">
+                    <option value="">Select User</option>
+                </select>
+
+                <button class="btn btn-primary btn-sm mb-3"
+                    onclick="addUserToProject(${data.project.id})">
+                    Add User
+                </button>
+
+                <hr>
+
+                <h5> Tasks</h5>
+
+                <ul class="list-group mb-2">
+                ${(data.tasks || []).map(t => `<li class="list-group-item">
+                ${t.task} 
+                <small class="text-muted">(${t.status})</small>
+                </li>`).join("")}
+                </ul>
+
+                <input type="text" id="newTask" class="form-control mb-2" placeholder="New Task">
+
+                <select id="assignTaskUser" class="form-select mb-2">
+                <option value="">Assign to User</option>
+                </select>
+
+                <button class="btn btn-success btn-sm mb-3"
+                onclick="addTaskToProject(${data.project.id})">
+                Add Task
+                </button>
+
+                <hr>
 
                 <button class="btn btn-secondary" onclick="window.backToProjects()">Back</button>
 
             </div>
         `);
 
+        window.loadProjectUsersDropdown();
+        window.loadTaskUsersDropdown();
+
+
     }).fail(function (err) {
         console.error("API ERROR:", err);
     });
+};
+
+window.loadProjectUsersDropdown = function () {
+
+    $.get("../api/get_all_users.php", function (users) {
+
+        let options = `<option value="">Select User</option>`;
+
+        users.forEach(function (u) {
+
+            //SKIP ADMIN USERS
+            if (u.role === "admin") return;
+
+            options += `<option value="${u.id}">${u.name}</option>`;
+        });
+
+        $("#newUser").html(options);
+
+    }, "json");
+};
+
+window.addUserToProject = function (projectId) {
+
+    let userId = $("#newUser").val();
+
+    if (!userId) {
+        Swal.fire("Error", "Please select a user", "error");
+        return;
+    }
+
+    $.post("../api/add_user_to_project.php", {
+        project_id: projectId,
+        user_id: userId
+    }, function (res) {
+
+        if (res.status === "success") {
+
+            Swal.fire("Success", res.message, "success");
+
+            // reload view
+            window.viewProject(projectId);
+
+        } else {
+            Swal.fire("Error", res.message, "error");
+        }
+
+    }, "json");
+};
+
+window.addTaskToProject = function (projectId) {
+
+    let task = $("#newTask").val().trim();
+    let userId = $("#assignTaskUser").val();
+
+    if (task === "") {
+        Swal.fire("Error", "Task cannot be empty", "error");
+        return;
+    }
+
+    if (!userId) {
+        Swal.fire("Error", "Please assign a user", "error");
+        return;
+    }
+
+    $.post("../api/add_task_to_project.php", {
+        project_id: projectId,
+        task: task,
+        assigned_user_id: userId
+    }, function (res) {
+
+        if (res.status === "success") {
+
+            Swal.fire("Success", res.message, "success");
+
+            $("#newTask").val("");
+            $("#assignTaskUser").val("");
+
+            window.viewProject(projectId);
+
+        } else {
+            Swal.fire("Error", res.message, "error");
+        }
+
+    }, "json");
+};
+
+window.loadTaskUsersDropdown = function () {
+
+    $.get("../api/get_all_users.php", function (users) {
+
+        let options = `<option value="">Assign to User</option>`;
+
+        users.forEach(u => {
+
+            // skip admin
+            if (u.role === "admin") return;
+
+            options += `<option value="${u.id}">${u.name}</option>`;
+        });
+
+        $("#assignTaskUser").html(options);
+
+    }, "json");
 };
 
 // EDIT
@@ -487,6 +625,8 @@ window.editProject = function (id) {
 
     }, "json");
 };
+
+
 
 // DELETE
 window.deleteProject = function (id) {
