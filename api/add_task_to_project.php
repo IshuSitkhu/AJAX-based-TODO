@@ -7,7 +7,7 @@ $project_id = $_POST['project_id'];
 $task = $_POST['task'];
 $assigned_user_id = $_POST['assigned_user_id'];
 
-// 1. FIRST check user is assigned
+// CHECK USER EXISTS IN PROJECT
 $check = $conn->prepare("
     SELECT id FROM project_users 
     WHERE project_id=? AND user_id=?
@@ -24,14 +24,15 @@ if ($res->num_rows == 0) {
     exit();
 }
 
-// 2. THEN insert
 $stmt = $conn->prepare("
-    INSERT INTO project_tasks (project_id, task, assigned_user_id, status)
-    VALUES (?, ?, ?, 'pending')
+    INSERT INTO project_tasks 
+    (project_id, task, assigned_user_id, assigned_by, status)
+    VALUES (?, ?, ?, ?, 'pending')
 ");
 
-$stmt->bind_param("isi", $project_id, $task, $assigned_user_id);
+$stmt->bind_param("isii", $project_id, $task, $assigned_user_id, $_SESSION['user_id']);
 
+// EXECUTE
 if ($stmt->execute()) {
     echo json_encode([
         "status" => "success",
@@ -40,7 +41,7 @@ if ($stmt->execute()) {
 } else {
     echo json_encode([
         "status" => "error",
-        "message" => "Failed to create task"
+        "message" => $stmt->error
     ]);
 }
 ?>

@@ -11,9 +11,12 @@ $stmt = $conn->prepare("
         pt.id,
         pt.task,
         pt.status,
-        p.title AS project_name
+        pt.created_at,
+        p.title AS project_name,
+        u1.name AS assigned_by_name
     FROM project_tasks pt
     JOIN projects p ON p.id = pt.project_id
+    LEFT JOIN users u1 ON u1.id = pt.assigned_by
     WHERE pt.assigned_user_id = ?
 ");
 

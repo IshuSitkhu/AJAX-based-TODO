@@ -445,102 +445,140 @@ window.viewProject = function (id) {
         $("#projectView").show();
 
         $("#projectView").html(`
-            <div class="card p-3">
+<div class="card p-3">
 
-                <h4>${data.project.title}</h4>
-                <p>${data.project.description}</p>
+    <!-- ================= PROJECT HEADER ================= -->
+    <div class="mb-2">
+        <h4 class="mb-1">${data.project.title}</h4>
+        <p class="text-muted mb-0">${data.project.description}</p>
+    </div>
 
-                <hr>
+    <hr>
 
-                <h5>Assigned Users</h5>
-                <ul class="list-group mb-2">
-    ${(data.users || []).map(u => `
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            ${u.name}
+    <!-- ================= MEMBERS SECTION ================= -->
+    <div class="mb-3">
 
-            <button class="btn btn-sm btn-danger"
-                onclick="removeUserFromProject(${data.project.id}, ${u.id})">
-                Remove
+        <h5 class="mb-2"> Project Members</h5>
+
+        <ul class="list-group mb-3">
+
+            ${(data.users || []).map(u => `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    ${u.name}
+
+                    <button class="btn btn-sm btn-outline-danger"
+                        onclick="removeUserFromProject(${data.project.id}, ${u.id})">
+                        Remove
+                    </button>
+                </li>
+            `).join("")}
+
+        </ul>
+
+        <!-- Add Member BOX -->
+        <div class="p-3 border rounded bg-light">
+
+            <label class="form-label mb-1">Add new member</label>
+
+            <select id="newUser" class="form-select mb-2">
+                <option value="">Select user to assign</option>
+            </select>
+
+            <button class="btn btn-primary btn-sm w-auto"
+                onclick="addUserToProject(${data.project.id})">
+                + Add Member
             </button>
-        </li>
-    `).join("")}
-</ul>
 
-                <select id="newUser" class="form-select mb-2">
-                    <option value="">Select User</option>
-                </select>
-
-                <button class="btn btn-primary btn-sm mb-3"
-                    onclick="addUserToProject(${data.project.id})">
-                    Add User
-                </button>
-
-                <hr>
-
-                <h5> Tasks</h5>
-
-                <ul class="list-group mb-2">
-${(data.tasks || []).map(t => `
-<li class="list-group-item d-flex justify-content-between align-items-center">
-
-    <div>
-        <strong>${t.task}</strong><br>
-        <small class="text-muted">${t.status}</small>
-    </div>
-
-    <div class="d-flex gap-2">
-
-        <!-- STATUS CHANGE -->
-        <select onchange="updateTaskStatus(${t.id}, this.value)" class="form-select form-select-sm">
-            <option value="pending" ${t.status === 'pending' ? 'selected' : ''}>Pending</option>
-            <option value="completed" ${t.status === 'completed' ? 'selected' : ''}>Completed</option>
-        </select>
-
-        <!-- EDIT -->
-        <button class="btn btn-warning btn-sm"
-            onclick="editProjectTask(${t.id}, \`${t.task}\`)">
-            Edit
-        </button>
-
-        <!-- DELETE -->
-        <button class="btn btn-danger btn-sm"
-            onclick="deleteProjectTask(${t.id})">
-            Delete
-        </button>
+        </div>
 
     </div>
 
-</li>
-`).join("")}
-</ul>
+    <hr>
 
-                <input type="text" id="newTask" class="form-control mb-2" placeholder="New Task">
+    <!-- ================= TASK SECTION ================= -->
+    <div class="mb-3">
 
-                <select id="assignTaskUser" class="form-select mb-2">
-                <option value="">Assign to User</option>
-                </select>
+        <h5 class="mb-2"> Tasks</h5>
 
-                <button class="btn btn-success btn-sm mb-3"
+        <ul class="list-group mb-3">
+
+            ${(data.tasks || []).map(t => `
+                <li class="list-group-item">
+
+                    <div class="d-flex justify-content-between align-items-start">
+
+                        <div>
+                            <strong>${t.task}</strong>
+
+                            <div class="mt-1">
+                                <small class="text-muted">
+                                    Assigned to: ${t.assigned_user ?? 'Unassigned'} <br>
+                                    Status: ${t.status} <br>
+                                    Created: ${t.created_at ?? 'N/A'}
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+
+                            <button class="btn btn-warning btn-sm"
+                                onclick="editProjectTask(${t.id}, \`${t.task}\`)">
+                                Edit
+                            </button>
+
+                            <button class="btn btn-danger btn-sm"
+                                onclick="deleteProjectTask(${t.id})">
+                                Delete
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </li>
+            `).join("")}
+
+        </ul>
+
+        <!-- Add Task CARD -->
+        <div class="p-3 border rounded bg-light">
+
+            <label class="form-label mb-1">Create new task</label>
+
+            <input type="text" id="newTask" class="form-control mb-2" placeholder="Enter task name">
+
+            <select id="assignTaskUser" class="form-select mb-2">
+                <option value="">Assign to user</option>
+            </select>
+
+            <button class="btn btn-success btn-sm w-auto"
                 onclick="addTaskToProject(${data.project.id})">
-                Add Task
-                </button>
+                + Add Task
+            </button>
 
-                <hr>
+        </div>
 
-                <button class="btn btn-secondary" onclick="window.backToProjects()">Back</button>
+    </div>
 
-            </div>
-        `);
+    <hr>
 
+    <!-- ================= BACK ================= -->
+    <button class="btn btn-secondary btn-sm w-auto"
+        onclick="window.backToProjects()">
+        ← Back to Projects
+    </button>
+
+</div>
+`);
+
+        // reload dropdowns
         window.loadProjectUsersDropdown();
         window.currentProjectId = data.project.id;
-window.loadProjectTaskUsers(window.currentProjectId);
-        
+        window.loadProjectTaskUsers(window.currentProjectId);
 
     }).fail(function (err) {
         console.error("API ERROR:", err);
     });
-    
 };
 
 window.loadProjectTaskUsers = function (projectId) {
@@ -643,8 +681,14 @@ window.removeUserFromProject = function(projectId, userId) {
 
 window.addTaskToProject = function (projectId) {
 
-    let task = $("#newTask").val().trim();
+    let task = $("#newTask").val();
     let userId = $("#assignTaskUser").val();
+
+    console.log("RAW TASK:", task);
+    console.log("TRIM TASK:", task.trim());
+    console.log("USER:", userId);
+
+    task = task.trim();
 
     if (task === "") {
         Swal.fire("Error", "Task cannot be empty", "error");
@@ -657,25 +701,29 @@ window.addTaskToProject = function (projectId) {
     }
 
     $.post("../api/add_task_to_project.php", {
-        project_id: projectId,
-        task: task,
-        assigned_user_id: userId
-    }, function (res) {
+    project_id: projectId,
+    task: task,
+    assigned_user_id: userId
+}, function (res) {
 
-        if (res.status === "success") {
+    console.log("API RESPONSE:", res);
 
-            Swal.fire("Success", res.message, "success");
+    if (res.status === "success") {
+        Swal.fire("Success", res.message, "success");
 
-            $("#newTask").val("");
-            $("#assignTaskUser").val("");
+        $("#newTask").val("");
+        $("#assignTaskUser").val("");
 
-            window.viewProject(projectId);
+        window.viewProject(projectId);
 
-        } else {
-            Swal.fire("Error", res.message, "error");
-        }
+    } else {
+        Swal.fire("Error", res.message, "error");
+    }
 
-    }, "json");
+}, "json").fail(function (err) {
+
+    console.error("AJAX ERROR:", err.responseText); // 👈 VERY IMPORTANT
+});
 };
 
 // window.loadTaskUsersDropdown = function () {
@@ -751,7 +799,11 @@ window.updateTaskStatus = function (id, status) {
     }, function (res) {
 
         if (res.status === "success") {
+
             Swal.fire("Updated", "Status changed", "success");
+
+            window.viewProject(window.currentProjectId);
+
         } else {
             Swal.fire("Error", "Update failed", "error");
         }

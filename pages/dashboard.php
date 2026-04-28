@@ -32,10 +32,10 @@ if ($_SESSION['role'] != 'admin') {
 
 <div class="container mt-4">
 
-    <div class="card shadow-sm p-3 mb-4">
+    <!-- <div class="card shadow-sm p-3 mb-4">
         <h4 class="mb-3">Task Overview</h4>
         <div id="stats">Loading stats...</div>
-    </div>
+    </div> -->
 
     <div class="mb-4">
         <button onclick="openCreate()" class="btn btn-primary me-2">Create User</button>
@@ -93,6 +93,8 @@ if ($_SESSION['role'] != 'admin') {
         </button>
 
         <hr>
+
+        <h4>Project Lists </h4>
     </div>
 
     <ul id="projectList" class="list-group"></ul>

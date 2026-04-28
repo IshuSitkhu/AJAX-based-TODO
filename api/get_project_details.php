@@ -25,9 +25,17 @@ $users = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // tasks
 $stmt3 = $conn->prepare("
-SELECT id, task, status
-FROM project_tasks
-WHERE project_id=?
+SELECT 
+    t.id,
+    t.task,
+    t.status,
+    t.created_at,
+    u.name AS assigned_user,
+    a.name AS assigned_by
+FROM project_tasks t
+LEFT JOIN users u ON u.id = t.assigned_user_id
+LEFT JOIN users a ON a.id = t.assigned_by
+WHERE t.project_id=?
 ");
 $stmt3->bind_param("i", $id);
 $stmt3->execute();

@@ -23,7 +23,9 @@ $(document).ready(function () {
                         <div>
                             <strong>${t.task}</strong><br>
                             <small class="text-muted">
-                                Project: ${t.project_name}
+                                Project: ${t.project_name} <br>
+                                Assigned by: ${t.assigned_by_name ?? 'Admin'} <br>
+                                Date: ${t.created_at ?? 'N/A'}
                             </small>
                         </div>
 
@@ -32,12 +34,18 @@ $(document).ready(function () {
                                 ${t.status}
                             </span>
 
-                            ${t.status !== 'completed' ? `
-                                <button class="btn btn-sm btn-success ms-2"
-                                    onclick="markCompleted(${t.id})">
-                                    Done
-                                </button>
-                            ` : ''}
+                            <select onchange="updateTaskStatus(${t.id}, this.value)" 
+                                    class="form-select form-select-sm ms-2">
+
+                                <option value="pending" ${t.status === 'pending' ? 'selected' : ''}>
+                                    Pending
+                                </option>
+
+                                <option value="completed" ${t.status === 'completed' ? 'selected' : ''}>
+                                    Completed
+                                </option>
+
+                            </select>
                         </div>
 
                     </li>`;
@@ -51,26 +59,24 @@ $(document).ready(function () {
 
     window.loadMyTasks = loadMyTasks;
 
-    // =========================
-    // MARK AS COMPLETED
-    // =========================
-    window.markCompleted = function (id) {
+   window.updateTaskStatus = function (id, status) {
 
-        $.post("../api/update_task_status.php", {
-            id: id,
-            status: "completed"
-        }, function(res) {
+    $.post("../api/update_task_status.php", {
+        id: id,
+        status: status
+    }, function (res) {
 
-            if (res.status === "success") {
+        if (res.status === "success") {
 
-                Swal.fire("Success", "Task completed", "success");
-                loadMyTasks();
+            Swal.fire("Updated", "Status changed", "success");
 
-            } else {
-                Swal.fire("Error", "Update failed", "error");
-            }
+            loadMyTasks();
 
-        }, "json");
-    };
+        } else {
+            Swal.fire("Error", res.message || "Update failed", "error");
+        }
+
+    }, "json");
+};
 
 });
