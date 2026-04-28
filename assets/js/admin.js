@@ -431,6 +431,10 @@ window.createProject = function () {
     }, "json");
 };
 
+let allTasks = [];
+let currentPage = 1;
+const tasksPerPage = 3;
+
 // VIEW
 window.viewProject = function (id) {
 
@@ -443,6 +447,10 @@ window.viewProject = function (id) {
         $("#projectForm").hide();
         $("#projectList").hide();
         $("#projectView").show();
+
+        // STORE TASKS FOR PAGINATION
+        allTasks = data.tasks || [];
+        currentPage = 1;
 
         $("#projectView").html(`
 <div class="card p-3">
@@ -460,20 +468,24 @@ window.viewProject = function (id) {
 
         <h5 class="mb-2"> Project Members</h5>
 
-        <ul class="list-group mb-3">
+        <div class="card p-3 d-inline-block" style="min-width: 320px; max-width: 500px;">
 
-            ${(data.users || []).map(u => `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    ${u.name}
+    <ul class="list-group">
 
-                    <button class="btn btn-sm btn-outline-danger"
-                        onclick="removeUserFromProject(${data.project.id}, ${u.id})">
-                        Remove
-                    </button>
-                </li>
-            `).join("")}
+        ${(data.users || []).map(u => `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                ${u.name}
 
-        </ul>
+                <button class="btn btn-sm btn-outline-danger"
+                    onclick="removeUserFromProject(${data.project.id}, ${u.id})">
+                    Remove
+                </button>
+            </li>
+        `).join("")}
+
+    </ul>
+
+</div>
 
         <!-- Add Member BOX -->
         <div class="p-3 border rounded bg-light">
@@ -500,45 +512,19 @@ window.viewProject = function (id) {
 
         <h5 class="mb-2"> Tasks</h5>
 
-        <ul class="list-group mb-3">
+        <!-- TASK LIST (PAGINATION OUTPUT) -->
+        <div id="taskContainer"></div>
 
-            ${(data.tasks || []).map(t => `
-                <li class="list-group-item">
+        <!-- PAGINATION BUTTONS -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
 
-                    <div class="d-flex justify-content-between align-items-start">
+            <button class="btn btn-sm btn-secondary" onclick="prevPage()">← Prev</button>
 
-                        <div>
-                            <strong>${t.task}</strong>
+            <span id="taskPageInfo" class="text-muted"></span>
 
-                            <div class="mt-1">
-                                <small class="text-muted">
-                                    Assigned to: ${t.assigned_user ?? 'Unassigned'} <br>
-                                    Status: ${t.status} <br>
-                                    Created: ${t.created_at ?? 'N/A'}
-                                </small>
-                            </div>
-                        </div>
+            <button class="btn btn-sm btn-secondary" onclick="nextPage()">Next →</button>
 
-                        <div class="d-flex gap-2">
-
-                            <button class="btn btn-warning btn-sm"
-                                onclick="editProjectTask(${t.id}, \`${t.task}\`)">
-                                Edit
-                            </button>
-
-                            <button class="btn btn-danger btn-sm"
-                                onclick="deleteProjectTask(${t.id})">
-                                Delete
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </li>
-            `).join("")}
-
-        </ul>
+        </div>
 
         <!-- Add Task CARD -->
         <div class="p-3 border rounded bg-light">
@@ -576,10 +562,91 @@ window.viewProject = function (id) {
         window.currentProjectId = data.project.id;
         window.loadProjectTaskUsers(window.currentProjectId);
 
+        // render first page
+        renderTasks();
+
     }).fail(function (err) {
         console.error("API ERROR:", err);
     });
 };
+
+function renderTasks() {
+
+    let start = (currentPage - 1) * tasksPerPage;
+    let end = start + tasksPerPage;
+
+    let paginatedTasks = allTasks.slice(start, end);
+
+    $("#taskContainer").html(`
+        <ul class="list-group mb-3">
+
+            ${paginatedTasks.map(t => `
+                <li class="list-group-item">
+
+                    <div class="d-flex justify-content-between align-items-start">
+
+                        <div>
+                            <strong>${t.task}</strong>
+
+                            <div class="mt-1">
+                                <small class="text-muted">
+                                    Assigned to: ${t.assigned_user ?? 'Unassigned'} <br>
+                                    Status: ${t.status} <br>
+                                    Created: ${t.created_at ?? 'N/A'}
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+
+                            <button class="btn btn-warning btn-sm"
+                                onclick="editProjectTask(${t.id}, \`${t.task}\`)">
+                                Edit
+                            </button>
+
+                            <button class="btn btn-danger btn-sm"
+                                onclick="deleteProjectTask(${t.id})">
+                                Delete
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </li>
+            `).join("")}
+
+        </ul>
+    `);
+
+    updateTaskPageInfo();
+}
+
+window.nextPage = function () {
+    let totalPages = Math.ceil(allTasks.length / tasksPerPage);
+
+    if (currentPage < totalPages) {
+        currentPage++;
+        renderTasks();
+    }
+};
+
+window.prevPage = function () {
+    if (currentPage > 1) {
+        currentPage--;
+        renderTasks();
+    }
+};
+
+function updateTaskPageInfo() {
+    let totalPages = Math.ceil(allTasks.length / tasksPerPage);
+
+    $("#taskPageInfo").text(`Page ${currentPage} of ${totalPages || 1}`);
+
+    
+    $("button:contains('← Prev')").prop("disabled", currentPage === 1);
+    $("button:contains('Next →')").prop("disabled", currentPage === totalPages);
+}
 
 window.loadProjectTaskUsers = function (projectId) {
 
@@ -859,4 +926,9 @@ window.backToProjects = function () {
     $("#projectForm").show();
     $("#projectList").show();
 };
+
+function openCreate() {
+    $(".section").hide();
+    $("#create").show();
+}
 });

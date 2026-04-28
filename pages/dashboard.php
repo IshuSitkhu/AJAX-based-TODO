@@ -116,5 +116,10 @@ function logout() {
 
 <script src="../assets/js/admin.js"></script>
 
+<script>
+$(document).ready(function () {
+    openCreate(); // show Create User by default
+});
+</script>
 </body>
 </html>
