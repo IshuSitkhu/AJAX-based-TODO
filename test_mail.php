@@ -1,5 +1,7 @@
 <?php
 
+include 'config/mail_config.php';
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 

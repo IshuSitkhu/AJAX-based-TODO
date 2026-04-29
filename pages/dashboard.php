@@ -89,8 +89,8 @@ if ($_SESSION['role'] != 'admin') {
 
         
         <button id="projectBtn" onclick="createProject()" class="btn btn-warning text-white mb-3">
-            Save Project
-        </button>
+    Save Project
+</button>
 
         <hr>
 

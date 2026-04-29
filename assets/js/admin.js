@@ -11,73 +11,102 @@ $(document).ready(function () {
     // =========================
     window.createUser = function () {
 
-        let id = $("#editId").val();
-        let name = $("#name").val().trim();
-        let email = $("#email").val().trim();
-        let password = $("#password").val();
+    let id = $("#editId").val();
+    let name = $("#name").val().trim();
+    let email = $("#email").val().trim();
+    let password = $("#password").val();
 
-        if (name.length < 3) {
-            Swal.fire("Error", "Name must be at least 3 characters", "error");
-            return;
-        }
+    // =========================
+    // VALIDATION
+    // =========================
 
-        let emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailPattern.test(email)) {
-            Swal.fire("Error", "Invalid email format", "error");
-            return;
-        }
+    if (name.length < 3) {
+        Swal.fire("Error", "Name must be at least 3 characters", "error");
+        return;
+    }
 
-        let strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
-
-        if (!id && !strongPassword.test(password)) {
-            Swal.fire("Weak Password", "Must include uppercase, lowercase, number, special char", "error");
-            return;
-        }
-
-        let url = id ? "../api/update_user.php" : "../api/create_user.php";
-
-        let data = { id, name, email };
-
-        if (password !== "") {
-            data.password = password;
-        }
-
-        $.ajax({
-            url: url,
-            method: "POST",
-            data: data,
-
-            success: function (res) {
-
-                try {
-                    let response = typeof res === "string" ? JSON.parse(res) : res;
-
-                    if (response.status === "success") {
-
-                        Swal.fire("Success", response.message, "success");
-
-                        $("#editId").val("");
-                        $("#name").val("");
-                        $("#email").val("");
-                        $("#password").val("");
-
-                        $("button[onclick='createUser()']").text("Submit");
-
-                        loadUsers();
-                    } else {
-                        Swal.fire("Error", response.message, "error");
-                    }
-
-                } catch (e) {
-                    Swal.fire("Error", "Invalid server response", "error");
-                }
-            },
-
-            error: function () {
-                Swal.fire("Error", "Server not responding", "error");
-            }
+    // Gmail only
+    let emailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+    if (!emailPattern.test(email)) {
+        Swal.fire({
+            icon: "error",
+            title: "Invalid Email",
+            text: "Only Gmail addresses are allowed (example@gmail.com)"
         });
-    };
+        return;
+    }
+
+    // PASSWORD VALIDATION (only if entered)
+    if (password !== "") {
+
+        let errors = [];
+
+        if (password.length < 8) errors.push("Minimum 8 characters");
+        if (!/[A-Z]/.test(password)) errors.push("At least 1 uppercase letter (A-Z)");
+        if (!/[a-z]/.test(password)) errors.push("At least 1 lowercase letter (a-z)");
+        if (!/\d/.test(password)) errors.push("At least 1 number (0-9)");
+        if (!/[@$!%*?&#]/.test(password)) errors.push("At least 1 special character (@ $ ! % * ? & #)");
+
+        if (errors.length > 0) {
+            Swal.fire({
+                icon: "error",
+                title: "Weak Password",
+                html: "Password must include:<br><br>" +
+                    errors.map(e => `• ${e}`).join("<br>")
+            });
+            return;
+        }
+    }
+
+    // =========================
+    // API CALL
+    // =========================
+
+    let url = id ? "../api/update_user.php" : "../api/create_user.php";
+
+    let data = { id, name, email };
+
+    if (password !== "") {
+        data.password = password;
+    }
+
+    $.ajax({
+        url: url,
+        method: "POST",
+        data: data,
+
+        success: function (res) {
+
+            try {
+                let response = typeof res === "string" ? JSON.parse(res) : res;
+
+                if (response.status === "success") {
+
+                    Swal.fire("Success", response.message, "success");
+
+                    $("#editId").val("");
+                    $("#name").val("");
+                    $("#email").val("");
+                    $("#password").val("");
+
+                    $("button[onclick='createUser()']").text("Submit");
+
+                    loadUsers();
+
+                } else {
+                    Swal.fire("Error", response.message, "error");
+                }
+
+            } catch (e) {
+                Swal.fire("Error", "Invalid server response", "error");
+            }
+        },
+
+        error: function () {
+            Swal.fire("Error", "Server not responding", "error");
+        }
+    });
+};
 
     // =========================
     // SECTION CONTROL
@@ -404,6 +433,30 @@ window.createProject = function () {
     let description = $("#projectDesc").val().trim();
     let users = $("#projectUsers").val();
 
+    // =========================
+    // VALIDATION
+    // =========================
+
+    if (title === "") {
+        Swal.fire("Error", "Project title is required", "error");
+        return;
+    }
+
+    if (title.length < 3) {
+        Swal.fire("Error", "Project title must be at least 3 characters", "error");
+        return;
+    }
+
+    // if (description === "") {
+    //     Swal.fire("Error", "Project description is required", "error");
+    //     return;
+    // }
+
+
+    // =========================
+    // API CALL
+    // =========================
+
     let url = window.editProjectId
         ? "../api/update_project.php"
         : "../api/create_project.php";
@@ -417,15 +470,22 @@ window.createProject = function () {
 
         if (res.status === "success") {
 
-            Swal.fire("Success", res.message, "success");
+    Swal.fire("Success", res.message, "success");
 
-            $("#projectTitle").val("");
-            $("#projectDesc").val("");
-            $("#projectUsers").val([]);
+    $("#projectTitle").val("");
+    $("#projectDesc").val("");
+    $("#projectUsers").val([]);
 
-            window.editProjectId = null;
+    window.editProjectId = null;
 
-            window.loadProjects();
+    window.loadProjects();
+
+    $("#projectBtn")
+        .text("Save Project")
+        .removeClass("btn-success")
+        .addClass("btn-warning text-white");
+}else {
+            Swal.fire("Error", res.message || "Something went wrong", "error");
         }
 
     }, "json");
@@ -789,7 +849,7 @@ window.addTaskToProject = function (projectId) {
 
 }, "json").fail(function (err) {
 
-    console.error("AJAX ERROR:", err.responseText); // 👈 VERY IMPORTANT
+    console.error("AJAX ERROR:", err.responseText); 
 });
 };
 
@@ -812,23 +872,27 @@ window.addTaskToProject = function (projectId) {
 //     }, "json");
 // };
 
-window.editProjectTask = function (id, oldTask) {
+window.editProject = function (id) {
 
-    let newTask = prompt("Edit Task:", oldTask);
+    $.get("../api/get_project_details.php?id=" + id, function (data) {
 
-    if (!newTask || newTask.trim() === "") return;
+        $("#projectForm").show();
+        $("#projectList").show();
+        $("#projectView").hide();
 
-    $.post("../api/update_project_task.php", {
-        id: id,
-        task: newTask
-    }, function (res) {
+        $("#projectTitle").val(data.project.title);
+        $("#projectDesc").val(data.project.description);
 
-        if (res.status === "success") {
-            Swal.fire("Updated", "Task updated", "success");
+        let userIds = data.users.map(u => u.id);
+        $("#projectUsers").val(userIds);
 
-            // refresh using stored project id
-            window.viewProject(window.currentProjectId);
-        }
+        window.editProjectId = id;
+
+        
+        $("#projectBtn")
+            .text("Update Project")
+            .removeClass("btn-warning")
+            .addClass("btn-success");
 
     }, "json");
 };
@@ -878,25 +942,6 @@ window.updateTaskStatus = function (id, status) {
     }, "json");
 };
 
-// EDIT
-window.editProject = function (id) {
-
-    $.get("../api/get_project_details.php?id=" + id, function (data) {
-
-        $("#projectForm").show();
-        $("#projectList").show();
-        $("#projectView").hide();
-
-        $("#projectTitle").val(data.project.title);
-        $("#projectDesc").val(data.project.description);
-
-        let userIds = data.users.map(u => u.id);
-        $("#projectUsers").val(userIds);
-
-        window.editProjectId = id;
-
-    }, "json");
-};
 
 
 

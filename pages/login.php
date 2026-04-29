@@ -27,7 +27,7 @@
 
         <div class="text-center">
             <small>Dont have an account? 
-                <a href="register.php">Register NOw!!</a>
+                <a href="register.php">Register Now!</a>
             </small>
         </div>
     </div>
