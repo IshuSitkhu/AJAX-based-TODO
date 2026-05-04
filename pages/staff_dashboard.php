@@ -17,17 +17,44 @@ if ($_SESSION['role'] != 'staff') {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script src="../assets/js/staff.js"></script>
+
+    <style>
+        body {
+    background: #f5f7fb;
+}
+
+.card {
+    border: none;
+    border-radius: 14px;
+}
+
+.navbar {
+    background: white !important;
+}
+        </style>
 </head>
 
 <body class="bg-light">
 
-<nav class="navbar navbar-dark bg-primary">
+<nav class="navbar navbar-expand-lg bg-white shadow-sm px-3">
     <div class="container-fluid">
-        <span class="navbar-brand">Staff Dashboard</span>
-        <div class="text-white">
-            Welcome, <?php echo $_SESSION['name']; ?>
-            <button onclick="logout()" class="btn btn-light btn-sm ms-3">Logout</button>
+
+        <span class="navbar-brand fw-semibold text-primary">
+            Staff Dashboard
+        </span>
+
+        <div class="d-flex align-items-center gap-3">
+
+            <span class="text-muted small">
+                Welcome, <strong class="text-dark"><?php echo $_SESSION['name']; ?></strong>
+            </span>
+
+            <button onclick="logout()" class="btn btn-outline-danger btn-sm">
+                Logout
+            </button>
+
         </div>
+
     </div>
 </nav>
 
