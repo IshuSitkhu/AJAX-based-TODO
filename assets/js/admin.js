@@ -976,4 +976,62 @@ function openCreate() {
     $(".section").hide();
     $("#create").show();
 }
+
+
 });
+function loadChart() {
+    $.get("../api/project_stats.php", function (res) {
+
+        let data = typeof res === "string" ? JSON.parse(res) : res;
+
+        let labels = [];
+        let values = [];
+
+        data.forEach(item => {
+            labels.push(item.project);     // X-axis (projects)
+            values.push(item.total_tasks); // Y-axis (task count)
+        });
+
+        const ctx = document.getElementById('projectChart').getContext('2d');
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Tasks',
+            data: values,
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false, // 🔥 CRITICAL
+        plugins: {
+            legend: {
+                display: false // removes big label area
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    font: {
+                        size: 10
+                    }
+                }
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1,
+                    font: {
+                        size: 10
+                    }
+                }
+            }
+        }
+    }
+});
+
+    });
+}

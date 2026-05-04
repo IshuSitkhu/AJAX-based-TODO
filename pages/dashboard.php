@@ -16,6 +16,7 @@ if ($_SESSION['role'] != 'admin') {
     <!-- jQuery + SweetAlert -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body class="bg-light">
@@ -29,6 +30,8 @@ if ($_SESSION['role'] != 'admin') {
         </div>
     </div>
 </nav>
+
+
 
 <div class="container mt-4">
 
@@ -104,6 +107,14 @@ if ($_SESSION['role'] != 'admin') {
 </div>
 
 </div>
+<div class="d-flex justify-content-center mb-4 ">
+
+    <div class="card p-3" style="width: 400px; height: 300px;">
+        <h6 class="mb-2 text-center">Project Tasks</h6>
+        <canvas id="projectChart"></canvas>
+    </div>
+
+</div>
 
 <script>
 // logout
@@ -119,6 +130,7 @@ function logout() {
 <script>
 $(document).ready(function () {
     openCreate(); // show Create User by default
+      loadChart();
 });
 </script>
 </body>
