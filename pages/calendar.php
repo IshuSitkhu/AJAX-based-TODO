@@ -19,14 +19,18 @@
 
     <style>
     body {
-        background: #076c8b67;
-    }
+    background: #f5f7fb;
+}
+.navbar {
+    background: white !important;
+}
 
     .calendar-card {
-        max-width: 1000px;
-        margin: 20px auto;
-        border-radius: 12px;
-    }
+    max-width: 1000px;
+    margin: 30px auto;
+    border-radius: 14px;
+    border: none;
+}
 
     #calendar {
         height: 80vh;
@@ -77,16 +81,26 @@
 
 <body>
 
-<nav class="navbar navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg shadow-sm px-3 bg-white">
     <div class="container-fluid">
-        <span class="navbar-brand">Calendar Dashboard</span>
 
-        <div class="text-white">
-            Welcome, <?php echo $_SESSION['name']; ?>
-            <button onclick="window.location='dashboard.php'" class="btn btn-sm btn-light ms-3">
-                Back
+        <span class="navbar-brand fw-semibold text-primary">
+            Calendar Dashboard
+        </span>
+
+        <div class="d-flex align-items-center gap-3">
+
+            <span class="text-muted small">
+                Welcome, <strong class="text-dark"><?php echo $_SESSION['name']; ?></strong>
+            </span>
+
+            <button onclick="window.location='dashboard.php'"
+                class="btn btn-outline-primary btn-sm">
+                ← Back
             </button>
+
         </div>
+
     </div>
 </nav>
 
