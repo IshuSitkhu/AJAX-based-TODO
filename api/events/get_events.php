@@ -9,10 +9,11 @@ $events = [];
 
 while ($row = mysqli_fetch_assoc($result)) {
     $events[] = [
-        "id" => $row['id'],
-        "title" => $row['title'],
-        "start" => $row['start']
-    ];
+    "id" => $row['id'],
+    "title" => $row['title'],
+    "start" => $row['start'],
+    "end" => $row['end']
+];
 }
 
 echo json_encode($events);

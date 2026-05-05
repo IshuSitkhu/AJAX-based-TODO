@@ -62,99 +62,132 @@ document.addEventListener('DOMContentLoaded', function () {
 
         dateClick: function (info) {
 
-            Swal.fire({
-                title: 'Add Event',
-                input: 'text',
-                inputLabel: 'Event Title',
-                inputPlaceholder: 'Enter event name...',
-                showCancelButton: true,
-                confirmButtonText: 'Add',
-                confirmButtonColor: '#28a745',
+    Swal.fire({
+        title: 'Add Event',
 
-                inputValidator: (value) => {
-                    if (!value) {
-                        return 'Event title cannot be empty!';
-                    }
-                }
+        html: `
+            <input id="eventTitle" class="swal2-input" placeholder="Event Title">
+            <input id="eventStart" type="date" class="swal2-input" value="${info.dateStr}">
+            <input id="eventEnd" type="date" class="swal2-input" value="${info.dateStr}">
+        `,
 
-            }).then((result) => {
+        showCancelButton: true,
+        confirmButtonText: 'Add',
+        confirmButtonColor: '#28a745',
 
-                if (result.isConfirmed) {
+        preConfirm: () => {
+            return {
+                title: document.getElementById('eventTitle').value,
+                start: document.getElementById('eventStart').value,
+                end: document.getElementById('eventEnd').value
+            }
+        }
 
-                    $.post('../api/events/add_event.php', {
-                        title: result.value,
-                        start: info.dateStr
-                    }, function () {
-                        Swal.fire('Added!', '', 'success');
-                        calendar.refetchEvents();
-                    });
+    }).then((result) => {
 
-                }
+        if (result.isConfirmed) {
 
+            let data = result.value;
+
+            if (!data.title || !data.start || !data.end) {
+                Swal.fire('All fields are required!');
+                return;
+            }
+
+            $.post('../api/events/add_event.php', {
+                title: data.title,
+                start: data.start,
+                end: data.end
+            }, function () {
+                Swal.fire('Added!', '', 'success');
+                calendar.refetchEvents();
             });
-        },
+
+        }
+
+    });
+},
 
         eventClick: function (info) {
 
+    Swal.fire({
+        title: 'Edit Event',
+
+        html: `
+            <input id="editTitle" class="swal2-input" placeholder="Title" value="${info.event.title}">
+            <input id="editStart" type="date" class="swal2-input"
+                value="${info.event.start.toISOString().split('T')[0]}">
+
+            <input id="editEnd" type="date" class="swal2-input"
+                value="${info.event.end ? info.event.end.toISOString().split('T')[0] : ''}">
+        `,
+
+        showCancelButton: true,
+        confirmButtonText: 'Update',
+        showDenyButton: true,
+        denyButtonText: 'Delete',
+        confirmButtonColor: '#ffc107',
+        denyButtonColor: '#dc3545',
+
+        preConfirm: () => {
+            return {
+                title: document.getElementById('editTitle').value,
+                start: document.getElementById('editStart').value,
+                end: document.getElementById('editEnd').value
+            }
+        }
+
+    }).then((result) => {
+
+        // ================= UPDATE =================
+        if (result.isConfirmed) {
+
+            let data = result.value;
+
+            if (!data.title || !data.start || !data.end) {
+                Swal.fire("All fields required!");
+                return;
+            }
+
+            $.post('../api/events/update_event.php', {
+                id: info.event.id,
+                title: data.title,
+                start: data.start,
+                end: data.end
+            }, function () {
+                Swal.fire('Updated!', '', 'success');
+                calendar.refetchEvents();
+            });
+
+        }
+
+        // ================= DELETE =================
+        else if (result.isDenied) {
+
             Swal.fire({
-                title: 'Edit Event',
-                input: 'text',
-                inputValue: info.event.title,
+                title: "Are you sure?",
+                text: "This event will be deleted!",
+                icon: "warning",
                 showCancelButton: true,
-                confirmButtonText: 'Update',
-                showDenyButton: true,
-                denyButtonText: 'Delete',
-                confirmButtonColor: '#ffc107',
-                denyButtonColor: '#dc3545',
+                confirmButtonColor: "#d33",
+                confirmButtonText: "Yes, delete it!"
+            }).then((confirmResult) => {
 
-                inputValidator: (value) => {
-                    if (!value) {
-                        return 'Event title cannot be empty!';
-                    }
-                }
+                if (confirmResult.isConfirmed) {
 
-            }).then((result) => {
-
-                // UPDATE
-                if (result.isConfirmed) {
-
-                    $.post('../api/events/update_event.php', {
-                        id: info.event.id,
-                        title: result.value
+                    $.post('../api/events/delete_event.php', {
+                        id: info.event.id
                     }, function () {
-                        Swal.fire('Updated!', '', 'success');
+                        Swal.fire('Deleted!', '', 'success');
                         calendar.refetchEvents();
                     });
 
                 }
 
-                // DELETE
-                else if (result.isDenied) {
-
-                    Swal.fire({
-                        title: "Are you sure?",
-                        text: "This event will be deleted!",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: "#d33",
-                        confirmButtonText: "Yes, delete it!"
-                    }).then((confirmResult) => {
-
-                        if (confirmResult.isConfirmed) {
-
-                            $.post('../api/events/delete_event.php', {
-                                id: info.event.id
-                            }, function () {
-                                Swal.fire('Deleted!', '', 'success');
-                                calendar.refetchEvents();
-                            });
-
-                        }
-
-                    });
-                }
             });
         }
+    });
+}
 
     });
 
