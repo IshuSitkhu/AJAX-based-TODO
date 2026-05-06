@@ -3,8 +3,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const calendarEl = document.getElementById('calendar');
 
     const formatDate = (date) => {
-        return date ? date.toISOString().split('T')[0] : '';
-    };
+    if (!date) return '';
+
+    let year = date.getFullYear();
+    let month = String(date.getMonth() + 1).padStart(2, '0');
+    let day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+};
 
     const validateEvent = ({ title, start, end }) => {
         if (!title || !start || !end) {
@@ -147,41 +153,39 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         },
 
-        // ================= DRAG FIX =================
-        eventDrop: function (info) {
+eventDrop: function (info) {
 
-            let start = formatDate(info.event.start);
+    let start = formatDate(info.event.start);
 
-            let end = info.event.end
-                ? formatDate(new Date(info.event.end.getTime() - 86400000))
-                : start;
+    let end = info.event.end
+        ? formatDate(new Date(info.event.end.getTime() - 86400000)) // ✅ subtract 1 day ONLY here
+        : start;
 
-            $.post('../api/events/update_event.php', {
-                id: info.event.id,
-                title: info.event.title,
-                start: start,
-                end: end
-            }).done(() => {
-                Swal.fire({ toast: true, icon: 'success', title: 'Moved', timer: 1500 });
-            }).fail(() => info.revert());
-        },
+    $.post('../api/events/update_event.php', {
+        id: info.event.id,
+        title: info.event.title,
+        start: start,
+        end: end
+    }).done(() => {
+        Swal.fire({ toast: true, icon: 'success', title: 'Moved', timer: 1500 });
+    }).fail(() => info.revert());
+},
 
-        // ================= RESIZE FIX =================
-        eventResize: function (info) {
+eventResize: function (info) {
 
-            let start = formatDate(info.event.start);
+    let start = formatDate(info.event.start);
 
-            let end = info.event.end
-                ? formatDate(new Date(info.event.end.getTime() - 86400000))
-                : start;
+    let end = info.event.end
+        ? formatDate(new Date(info.event.end.getTime() - 86400000)) // ✅ same fix
+        : start;
 
-            $.post('../api/events/update_event.php', {
-                id: info.event.id,
-                title: info.event.title,
-                start: start,
-                end: end
-            });
-        }
+    $.post('../api/events/update_event.php', {
+        id: info.event.id,
+        title: info.event.title,
+        start: start,
+        end: end
+    });
+}
 
     });
 
