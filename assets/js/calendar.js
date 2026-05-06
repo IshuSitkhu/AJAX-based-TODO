@@ -117,7 +117,7 @@ dateClick: function (info) {
             }
         });
 
-    }, 'json'); // ✅ IMPORTANT
+    }, 'json'); 
 },
 
 eventClick: function (info) {
