@@ -1,193 +1,192 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-    var calendarEl = document.getElementById('calendar');
+    const calendarEl = document.getElementById('calendar');
 
-    var calendar = new FullCalendar.Calendar(calendarEl, {
+    // ================= COMMON FUNCTIONS =================
+
+    const formatDate = (date) => {
+        return date ? date.toISOString().split('T')[0] : '';
+    };
+
+    const validateEvent = ({ title, start, end }) => {
+        if (!title || !start || !end) {
+            Swal.showValidationMessage(" All fields are required");
+            return false;
+        }
+        if (end < start) {
+            Swal.showValidationMessage(" End date cannot be before start date");
+            return false;
+        }
+        return true;
+    };
+
+    const eventFormHTML = (data = {}) => {
+        return `
+            <div style="text-align:left">
+
+                <label style="font-size:13px;">Event Title</label>
+                <input id="title" class="swal2-input" 
+                    value="${data.title || ''}" placeholder="Enter event title">
+
+                <div style="display:flex; gap:10px; margin-top:5px;">
+
+                    <div style="flex:1;">
+                        <label style="font-size:12px;">Start</label>
+                        <input id="start" type="date" 
+                            class="form-control small-date" 
+                            value="${data.start || ''}">
+                    </div>
+
+                    <div style="flex:1;">
+                        <label style="font-size:12px;">End</label>
+                        <input id="end" type="date" 
+                            class="form-control small-date" 
+                            value="${data.end || ''}">
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+    };
+
+    const getFormData = () => {
+        return {
+            title: document.getElementById('title').value.trim(),
+            start: document.getElementById('start').value,
+            end: document.getElementById('end').value
+        };
+    };
+
+    const postAndRefresh = (url, data, msg) => {
+        $.post(url, data, function () {
+            Swal.fire(' ' + msg, '', 'success');
+            calendar.refetchEvents();
+        });
+    };
+
+    // ================= CALENDAR =================
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
 
         initialView: 'dayGridMonth',
-
         displayEventTime: false,
-
         eventColor: "#0d6efd",
 
-        //  FETCH EVENTS
         events: '../api/events/get_events.php',
 
-        // 🇳🇵 NEPALI DATE ADDITION
+        // 🇳🇵 Nepali Date
         dayCellDidMount: function (info) {
-
             try {
-                let engDate = info.date;
-
-                let nepDate = NepaliDate.fromAD(engDate);
-
-                let bsDay = nepDate.getDate();
-                let bsMonthIndex = nepDate.getMonth();
+                let nepDate = NepaliDate.fromAD(info.date);
 
                 const nepaliDigits = ['०','१','२','३','४','५','६','७','८','९'];
-
-                function toNepaliNumber(num) {
-                    return num.toString().split('').map(d => nepaliDigits[d]).join('');
-                }
-
                 const bsMonths = [
                     "Baishakh","Jestha","Ashadh","Shrawan","Bhadra","Ashwin",
                     "Kartik","Mangsir","Poush","Magh","Falgun","Chaitra"
                 ];
 
-                let bsMonthName = bsMonths[bsMonthIndex];
+                const toNepaliNumber = (num) =>
+                    num.toString().split('').map(d => nepaliDigits[d]).join('');
 
                 let bs = document.createElement("div");
-                bs.className = "bs-date";  
+                bs.className = "bs-date";
 
                 bs.innerHTML = `
-                    <div style="font-size:11px; font-weight:600; color:#198754;">
-                        ${toNepaliNumber(bsDay)}
+                    <div style="font-size:11px;font-weight:600;color:#198754;">
+                        ${toNepaliNumber(nepDate.getDate())}
                     </div>
-                    <div style="font-size:9px; color:#555;">
-                        ${bsMonthName}
+                    <div style="font-size:9px;color:#555;">
+                        ${bsMonths[nepDate.getMonth()]}
                     </div>
                 `;
 
-                // append below AD date
-                let topEl = info.el.querySelector('.fc-daygrid-day-top');
-                if (topEl) {
-                    topEl.appendChild(bs);
-                }
+                info.el.querySelector('.fc-daygrid-day-top')?.appendChild(bs);
 
             } catch (e) {
                 console.log(e);
             }
         },
 
+        // ================= ADD EVENT =================
         dateClick: function (info) {
 
-    Swal.fire({
-        title: 'Add Event',
-
-        html: `
-            <input id="eventTitle" class="swal2-input" placeholder="Event Title">
-            <input id="eventStart" type="date" class="swal2-input" value="${info.dateStr}">
-            <input id="eventEnd" type="date" class="swal2-input" value="${info.dateStr}">
-        `,
-
-        showCancelButton: true,
-        confirmButtonText: 'Add',
-        confirmButtonColor: '#28a745',
-
-        preConfirm: () => {
-            return {
-                title: document.getElementById('eventTitle').value,
-                start: document.getElementById('eventStart').value,
-                end: document.getElementById('eventEnd').value
-            }
-        }
-
-    }).then((result) => {
-
-        if (result.isConfirmed) {
-
-            let data = result.value;
-
-            if (!data.title || !data.start || !data.end) {
-                Swal.fire('All fields are required!');
-                return;
-            }
-
-            $.post('../api/events/add_event.php', {
-                title: data.title,
-                start: data.start,
-                end: data.end
-            }, function () {
-                Swal.fire('Added!', '', 'success');
-                calendar.refetchEvents();
-            });
-
-        }
-
-    });
-},
-
-        eventClick: function (info) {
-
-    Swal.fire({
-        title: 'Edit Event',
-
-        html: `
-            <input id="editTitle" class="swal2-input" placeholder="Title" value="${info.event.title}">
-            <input id="editStart" type="date" class="swal2-input"
-                value="${info.event.start.toISOString().split('T')[0]}">
-
-            <input id="editEnd" type="date" class="swal2-input"
-                value="${info.event.end ? info.event.end.toISOString().split('T')[0] : ''}">
-        `,
-
-        showCancelButton: true,
-        confirmButtonText: 'Update',
-        showDenyButton: true,
-        denyButtonText: 'Delete',
-        confirmButtonColor: '#ffc107',
-        denyButtonColor: '#dc3545',
-
-        preConfirm: () => {
-            return {
-                title: document.getElementById('editTitle').value,
-                start: document.getElementById('editStart').value,
-                end: document.getElementById('editEnd').value
-            }
-        }
-
-    }).then((result) => {
-
-        // ================= UPDATE =================
-        if (result.isConfirmed) {
-
-            let data = result.value;
-
-            if (!data.title || !data.start || !data.end) {
-                Swal.fire("All fields required!");
-                return;
-            }
-
-            $.post('../api/events/update_event.php', {
-                id: info.event.id,
-                title: data.title,
-                start: data.start,
-                end: data.end
-            }, function () {
-                Swal.fire('Updated!', '', 'success');
-                calendar.refetchEvents();
-            });
-
-        }
-
-        // ================= DELETE =================
-        else if (result.isDenied) {
-
             Swal.fire({
-                title: "Are you sure?",
-                text: "This event will be deleted!",
-                icon: "warning",
+                title: ' Add Event',
+                html: eventFormHTML({
+                    start: info.dateStr,
+                    end: info.dateStr
+                }),
                 showCancelButton: true,
-                confirmButtonColor: "#d33",
-                confirmButtonText: "Yes, delete it!"
-            }).then((confirmResult) => {
+                confirmButtonText: ' Add',
+                confirmButtonColor: '#198754',
+                background: '#f8f9fa',
 
-                if (confirmResult.isConfirmed) {
-
-                    $.post('../api/events/delete_event.php', {
-                        id: info.event.id
-                    }, function () {
-                        Swal.fire('Deleted!', '', 'success');
-                        calendar.refetchEvents();
-                    });
-
+                preConfirm: () => {
+                    let data = getFormData();
+                    return validateEvent(data) && data;
                 }
 
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    postAndRefresh('../api/events/add_event.php', result.value, 'Added!');
+                }
+            });
+        },
+
+        // ================= EDIT / DELETE =================
+        eventClick: function (info) {
+
+            Swal.fire({
+                title: ' Edit Event',
+                html: eventFormHTML({
+                    title: info.event.title,
+                    start: formatDate(info.event.start),
+                    end: formatDate(info.event.end)
+                }),
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: ' Update',
+                denyButtonText: ' Delete',
+                confirmButtonColor: '#ffc107',
+                denyButtonColor: '#dc3545',
+
+                preConfirm: () => {
+                    let data = getFormData();
+                    return validateEvent(data) && data;
+                }
+
+            }).then((result) => {
+
+                // UPDATE
+                if (result.isConfirmed) {
+                    postAndRefresh('../api/events/update_event.php', {
+                        id: info.event.id,
+                        ...result.value
+                    }, 'Updated!');
+                }
+
+                // DELETE
+                else if (result.isDenied) {
+
+                    Swal.fire({
+                        title: "Delete this event?",
+                        text: "This cannot be undone!",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#d33",
+                        confirmButtonText: "Yes, delete"
+                    }).then((confirmResult) => {
+
+                        if (confirmResult.isConfirmed) {
+                            postAndRefresh('../api/events/delete_event.php', {
+                                id: info.event.id
+                            }, 'Deleted!');
+                        }
+                    });
+                }
             });
         }
-    });
-}
 
     });
 
