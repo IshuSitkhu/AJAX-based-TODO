@@ -8,13 +8,21 @@ document.addEventListener('DOMContentLoaded', function () {
         return date ? date.toISOString().split('T')[0] : '';
     };
 
+    // FIX FullCalendar end-date (exclusive issue)
+    const fixEndDate = (date) => {
+        if (!date) return null;
+        let d = new Date(date);
+        d.setDate(d.getDate() - 1);
+        return formatDate(d);
+    };
+
     const validateEvent = ({ title, start, end }) => {
         if (!title || !start || !end) {
-            Swal.showValidationMessage(" All fields are required");
+            Swal.showValidationMessage("All fields are required");
             return false;
         }
         if (end < start) {
-            Swal.showValidationMessage(" End date cannot be before start date");
+            Swal.showValidationMessage("End date cannot be before start date");
             return false;
         }
         return true;
@@ -73,6 +81,10 @@ document.addEventListener('DOMContentLoaded', function () {
         displayEventTime: false,
         eventColor: "#0d6efd",
 
+        editable: true,
+        eventStartEditable: true,
+        eventDurationEditable: true,
+
         events: '../api/events/get_events.php',
 
         // 🇳🇵 Nepali Date
@@ -112,15 +124,14 @@ document.addEventListener('DOMContentLoaded', function () {
         dateClick: function (info) {
 
             Swal.fire({
-                title: ' Add Event',
+                title: 'Add Event',
                 html: eventFormHTML({
                     start: info.dateStr,
                     end: info.dateStr
                 }),
                 showCancelButton: true,
-                confirmButtonText: ' Add',
+                confirmButtonText: 'Add',
                 confirmButtonColor: '#198754',
-                background: '#f8f9fa',
 
                 preConfirm: () => {
                     let data = getFormData();
@@ -138,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function () {
         eventClick: function (info) {
 
             Swal.fire({
-                title: ' Edit Event',
+                title: 'Edit Event',
                 html: eventFormHTML({
                     title: info.event.title,
                     start: formatDate(info.event.start),
@@ -146,8 +157,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }),
                 showCancelButton: true,
                 showDenyButton: true,
-                confirmButtonText: ' Update',
-                denyButtonText: ' Delete',
+                confirmButtonText: 'Update',
+                denyButtonText: 'Delete',
                 confirmButtonColor: '#ffc107',
                 denyButtonColor: '#dc3545',
 
@@ -158,7 +169,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             }).then((result) => {
 
-                // UPDATE
                 if (result.isConfirmed) {
                     postAndRefresh('../api/events/update_event.php', {
                         id: info.event.id,
@@ -166,7 +176,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     }, 'Updated!');
                 }
 
-                // DELETE
                 else if (result.isDenied) {
 
                     Swal.fire({
@@ -185,6 +194,66 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     });
                 }
+            });
+        },
+
+        // ================= DRAG EVENT =================
+        eventDrop: function (info) {
+
+            let start = formatDate(info.event.start);
+            let end = info.event.end
+                ? fixEndDate(info.event.end)
+                : start;
+
+            $.post('../api/events/update_event.php', {
+                id: info.event.id,
+                title: info.event.title,
+                start: start,
+                end: end
+            }).done(() => {
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Event moved',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+
+            }).fail(() => {
+                info.revert(); // rollback
+                Swal.fire(' Update failed');
+            });
+        },
+
+        // ================= RESIZE EVENT =================
+        eventResize: function (info) {
+
+            let start = formatDate(info.event.start);
+            let end = info.event.end
+                ? fixEndDate(info.event.end)
+                : start;
+
+            $.post('../api/events/update_event.php', {
+                id: info.event.id,
+                title: info.event.title,
+                start: start,
+                end: end
+            }).done(() => {
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Duration updated',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+
+            }).fail(() => {
+                info.revert(); // rollback
+                Swal.fire(' Update failed');
             });
         }
 
