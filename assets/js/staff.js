@@ -2,8 +2,10 @@ $(document).ready(function () {
 
     loadMyTasks();
 
+    let calendar; // important
+
     // =========================
-    // LOAD STAFF PROJECT TASKS
+    // LOAD TASKS
     // =========================
     function loadMyTasks() {
 
@@ -59,24 +61,90 @@ $(document).ready(function () {
 
     window.loadMyTasks = loadMyTasks;
 
-   window.updateTaskStatus = function (id, status) {
+    // =========================
+    // UPDATE STATUS
+    // =========================
+    window.updateTaskStatus = function (id, status) {
 
-    $.post("../api/update_task_status.php", {
-        id: id,
-        status: status
-    }, function (res) {
+        $.post("../api/update_task_status.php", {
+            id: id,
+            status: status
+        }, function (res) {
 
-        if (res.status === "success") {
+            if (res.status === "success") {
+                Swal.fire("Updated", "Status changed", "success");
+                loadMyTasks();
+            } else {
+                Swal.fire("Error", res.message || "Update failed", "error");
+            }
 
-            Swal.fire("Updated", "Status changed", "success");
+        }, "json");
+    };
 
-            loadMyTasks();
+    // =========================
+    // NAVIGATION (ADMIN STYLE)
+    // =========================
+    window.openTasks = function () {
+        $(".section").hide();
+        $("#taskSection").show();
+    };
 
+    window.openCalendar = function () {
+
+        $(".section").hide();
+        $("#calendarSection").show();
+
+        // INIT ONLY ON FIRST OPEN
+        if (!calendar) {
+            initCalendar();
         } else {
-            Swal.fire("Error", res.message || "Update failed", "error");
+            calendar.updateSize(); // FIX BLANK ISSUE
         }
+    };
 
-    }, "json");
-};
+    // =========================
+    // CALENDAR INIT
+    // =========================
+    function initCalendar() {
+
+        const calendarEl = document.getElementById('calendar');
+
+        calendar = new FullCalendar.Calendar(calendarEl, {
+
+            initialView: 'dayGridMonth',
+            displayEventTime: false,
+            eventColor: "#0d6efd",
+
+            events: "../api/events/get_events.php",
+
+            editable: false,
+
+            eventClick: function (info) {
+                Swal.fire({
+                    title: info.event.title,
+                    html: `
+                        <b>Start:</b> ${info.event.start.toISOString().split('T')[0]} <br>
+                        <b>End:</b> ${info.event.end ? info.event.end.toISOString().split('T')[0] : 'N/A'}
+                    `,
+                    icon: "info"
+                });
+            }
+
+        });
+
+        calendar.render();
+    }
+
+    // =========================
+    // LOGOUT
+    // =========================
+    window.logout = function () {
+        $.get("../api/logout.php", function () {
+            window.location.href = "login.php";
+        });
+    };
+
+    // default view
+    openTasks();
 
 });

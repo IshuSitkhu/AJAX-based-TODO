@@ -11,31 +11,94 @@ if ($_SESSION['role'] != 'staff') {
 <head>
     <title>Staff Dashboard</title>
 
+    <!-- FullCalendar -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+    <!-- Nepali Date -->
+    <script src="https://cdn.jsdelivr.net/npm/nepali-date-converter/dist/nepali-date-converter.min.js"></script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <script src="../assets/js/calendar.js"></script>
+
     <script src="../assets/js/staff.js"></script>
 
     <style>
         body {
-    background: #f5f7fb;
-}
+            background: #f5f7fb;
+        }
 
-.card {
-    border: none;
-    border-radius: 14px;
-}
+        .card {
+            border: none;
+            border-radius: 14px;
+        }
 
-.navbar {
-    background: white !important;
-}
-        </style>
+        .navbar {
+            background: white !important;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .btn {
+            border-radius: 10px;
+        }
+
+        /* =========================
+           CALENDAR ADMIN STYLE FIX
+        ========================== */
+
+        #calendar {
+            height: 80vh;
+        }
+
+        .calendar-card {
+            max-width: 1000px;
+            margin: 30px auto;
+            border-radius: 14px;
+            border: none;
+        }
+
+        .fc-daygrid-day-top {
+            display: flex !important;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .fc-daygrid-day-number {
+            font-weight: 600;
+            font-size: 13px;
+            text-align: center;
+            color: #000;
+        }
+
+        .bs-date {
+            margin-top: 2px;
+            text-align: center;
+        }
+
+        .fc-day-today {
+            background-color: #076c8b4d !important;
+            border: 1px solid #0d6efd;
+            border-radius: 6px;
+        }
+
+        .fc-day-sat .fc-daygrid-day-number {
+            color: #b10516 !important;
+            font-weight: 800;
+        }
+    </style>
 </head>
 
 <body class="bg-light">
 
+<!-- NAVBAR -->
 <nav class="navbar navbar-expand-lg bg-white shadow-sm px-3">
     <div class="container-fluid">
 
@@ -49,6 +112,14 @@ if ($_SESSION['role'] != 'staff') {
                 Welcome, <strong class="text-dark"><?php echo $_SESSION['name']; ?></strong>
             </span>
 
+            <button onclick="openTasks()" class="btn btn-outline-primary btn-sm">
+                Tasks
+            </button>
+
+            <button onclick="openCalendar()" class="btn btn-outline-success btn-sm">
+                Calendar
+            </button>
+
             <button onclick="logout()" class="btn btn-outline-danger btn-sm">
                 Logout
             </button>
@@ -60,74 +131,30 @@ if ($_SESSION['role'] != 'staff') {
 
 <div class="container mt-4">
 
-    <div class="card shadow-sm p-3">
+    <!-- TASKS -->
+    <div id="taskSection" class="card shadow-sm p-3 section" style="display:block;">
         <h4 class="mb-3">My Project Tasks</h4>
-
         <ul id="taskList" class="list-group"></ul>
     </div>
 
-</div>
+    <!-- CALENDAR -->
+    <div id="calendarSection" class="card shadow-sm p-3 section calendar-card">
 
-<script>
-// =========================
-// LOAD PROJECT TASKS
-// =========================
-function loadMyTasks() {
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Event Calendar</h5>
 
-    $.get("../api/staff_project_tasks.php", function(data) {
-
-        let html = "";
-
-        if (data.length === 0) {
-            html = `<li class="list-group-item text-muted">No tasks assigned</li>`;
-        } else {
-
-            data.forEach(t => {
-
-    html += `
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-
-        <div>
-            <strong>${t.task}</strong><br>
             <small class="text-muted">
-                Project: ${t.project_name}
+                View only • Staff
             </small>
         </div>
 
-        <div>
-            <span class="badge bg-${t.status === 'completed' ? 'success' : 'warning'}">
-                ${t.status}
-            </span>
+        <hr>
 
-            ${t.status !== 'completed' ? `
-                <button class="btn btn-sm btn-success ms-2"
-                    onclick="markCompleted(${t.id})">
-                    Done
-                </button>
-            ` : ''}
-        </div>
+        <div id="calendar"></div>
 
-    </li>`;
-});
-        }
+    </div>
 
-        $("#taskList").html(html);
-
-    }, "json");
-}
-
-// load on page start
-loadMyTasks();
-
-// =========================
-// LOGOUT
-// =========================
-function logout() {
-    $.get("../api/logout.php", function() {
-        window.location.href = "login.php";
-    });
-}
-</script>
+</div>
 
 </body>
 </html>
