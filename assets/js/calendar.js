@@ -2,18 +2,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const calendarEl = document.getElementById('calendar');
 
-    // ================= COMMON FUNCTIONS =================
-
     const formatDate = (date) => {
         return date ? date.toISOString().split('T')[0] : '';
-    };
-
-    // FIX FullCalendar end-date (exclusive issue)
-    const fixEndDate = (date) => {
-        if (!date) return null;
-        let d = new Date(date);
-        d.setDate(d.getDate() - 1);
-        return formatDate(d);
     };
 
     const validateEvent = ({ title, start, end }) => {
@@ -68,15 +58,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const postAndRefresh = (url, data, msg) => {
         $.post(url, data, function () {
-            Swal.fire(' ' + msg, '', 'success');
+            Swal.fire(msg, '', 'success');
             calendar.refetchEvents();
         });
     };
 
-    // ================= CALENDAR =================
-
     const calendar = new FullCalendar.Calendar(calendarEl, {
 
+        timeZone: 'local',
         initialView: 'dayGridMonth',
         displayEventTime: false,
         eventColor: "#0d6efd",
@@ -87,40 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         events: '../api/events/get_events.php',
 
-        // 🇳🇵 Nepali Date
-        dayCellDidMount: function (info) {
-            try {
-                let nepDate = NepaliDate.fromAD(info.date);
-
-                const nepaliDigits = ['०','१','२','३','४','५','६','७','८','९'];
-                const bsMonths = [
-                    "Baishakh","Jestha","Ashadh","Shrawan","Bhadra","Ashwin",
-                    "Kartik","Mangsir","Poush","Magh","Falgun","Chaitra"
-                ];
-
-                const toNepaliNumber = (num) =>
-                    num.toString().split('').map(d => nepaliDigits[d]).join('');
-
-                let bs = document.createElement("div");
-                bs.className = "bs-date";
-
-                bs.innerHTML = `
-                    <div style="font-size:11px;font-weight:600;color:#198754;">
-                        ${toNepaliNumber(nepDate.getDate())}
-                    </div>
-                    <div style="font-size:9px;color:#555;">
-                        ${bsMonths[nepDate.getMonth()]}
-                    </div>
-                `;
-
-                info.el.querySelector('.fc-daygrid-day-top')?.appendChild(bs);
-
-            } catch (e) {
-                console.log(e);
-            }
-        },
-
-        // ================= ADD EVENT =================
+        // ================= ADD =================
         dateClick: function (info) {
 
             Swal.fire({
@@ -145,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         },
 
-        // ================= EDIT / DELETE =================
+        // ================= EDIT =================
         eventClick: function (info) {
 
             Swal.fire({
@@ -153,7 +109,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 html: eventFormHTML({
                     title: info.event.title,
                     start: formatDate(info.event.start),
-                    end: formatDate(info.event.end)
+
+                    // ✔ FIX: correct FullCalendar end handling
+                    end: info.event.end
+                        ? formatDate(new Date(info.event.end.getTime() - 86400000))
+                        : formatDate(info.event.start)
                 }),
                 showCancelButton: true,
                 showDenyButton: true,
@@ -177,32 +137,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 else if (result.isDenied) {
-
-                    Swal.fire({
-                        title: "Delete this event?",
-                        text: "This cannot be undone!",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: "#d33",
-                        confirmButtonText: "Yes, delete"
-                    }).then((confirmResult) => {
-
-                        if (confirmResult.isConfirmed) {
-                            postAndRefresh('../api/events/delete_event.php', {
-                                id: info.event.id
-                            }, 'Deleted!');
-                        }
+                    $.post('../api/events/delete_event.php', {
+                        id: info.event.id
+                    }, function () {
+                        Swal.fire('Deleted!');
+                        calendar.refetchEvents();
                     });
                 }
             });
         },
 
-        // ================= DRAG EVENT =================
+        // ================= DRAG FIX =================
         eventDrop: function (info) {
 
             let start = formatDate(info.event.start);
+
             let end = info.event.end
-                ? fixEndDate(info.event.end)
+                ? formatDate(new Date(info.event.end.getTime() - 86400000))
                 : start;
 
             $.post('../api/events/update_event.php', {
@@ -211,28 +162,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 start: start,
                 end: end
             }).done(() => {
-
-                Swal.fire({
-                    toast: true,
-                    position: 'top-end',
-                    icon: 'success',
-                    title: 'Event moved',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-
-            }).fail(() => {
-                info.revert(); // rollback
-                Swal.fire(' Update failed');
-            });
+                Swal.fire({ toast: true, icon: 'success', title: 'Moved', timer: 1500 });
+            }).fail(() => info.revert());
         },
 
-        // ================= RESIZE EVENT =================
+        // ================= RESIZE FIX =================
         eventResize: function (info) {
 
             let start = formatDate(info.event.start);
+
             let end = info.event.end
-                ? fixEndDate(info.event.end)
+                ? formatDate(new Date(info.event.end.getTime() - 86400000))
                 : start;
 
             $.post('../api/events/update_event.php', {
@@ -240,20 +180,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 title: info.event.title,
                 start: start,
                 end: end
-            }).done(() => {
-
-                Swal.fire({
-                    toast: true,
-                    position: 'top-end',
-                    icon: 'success',
-                    title: 'Duration updated',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-
-            }).fail(() => {
-                info.revert(); // rollback
-                Swal.fire(' Update failed');
             });
         }
 
