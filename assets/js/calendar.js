@@ -24,43 +24,58 @@ document.addEventListener('DOMContentLoaded', function () {
         return true;
     };
 
-    const eventFormHTML = (data = {}) => {
-        return `
-            <div style="text-align:left">
+    const eventFormHTML = (data = {}, users = []) => {
 
-                <label style="font-size:13px;">Event Title</label>
-                <input id="title" class="swal2-input" 
-                    value="${data.title || ''}" placeholder="Enter event title">
+    let options = users.map(u => {
+        let selected = data.users?.includes(String(u.id)) ? 'selected' : '';
+        return `<option value="${u.id}" ${selected}>${u.name}</option>`;
+    }).join('');
 
-                <div style="display:flex; gap:10px; margin-top:5px;">
+    return `
+        <div style="text-align:left">
 
-                    <div style="flex:1;">
-                        <label style="font-size:12px;">Start</label>
-                        <input id="start" type="date" 
-                            class="form-control small-date" 
-                            value="${data.start || ''}">
-                    </div>
+            <label style="font-size:13px;">Event Title</label>
+            <input id="title" class="swal2-input" 
+                value="${data.title || ''}" placeholder="Enter event title">
 
-                    <div style="flex:1;">
-                        <label style="font-size:12px;">End</label>
-                        <input id="end" type="date" 
-                            class="form-control small-date" 
-                            value="${data.end || ''}">
-                    </div>
+            <div style="display:flex; gap:10px; margin-top:5px;">
 
+                <div style="flex:1;">
+                    <label style="font-size:12px;">Start</label>
+                    <input id="start" type="date" 
+                        class="form-control small-date" 
+                        value="${data.start || ''}">
+                </div>
+
+                <div style="flex:1;">
+                    <label style="font-size:12px;">End</label>
+                    <input id="end" type="date" 
+                        class="form-control small-date" 
+                        value="${data.end || ''}">
                 </div>
 
             </div>
-        `;
-    };
+
+            <label class="mt-2">Assign Users</label>
+            <select id="users" class="form-select" multiple>
+                ${options}
+            </select>
+
+        </div>
+    `;
+};
 
     const getFormData = () => {
-        return {
-            title: document.getElementById('title').value.trim(),
-            start: document.getElementById('start').value,
-            end: document.getElementById('end').value
-        };
+    let selectedUsers = Array.from(document.getElementById('users').selectedOptions)
+        .map(opt => opt.value);
+
+    return {
+        title: document.getElementById('title').value.trim(),
+        start: document.getElementById('start').value,
+        end: document.getElementById('end').value,
+        users: selectedUsers
     };
+};
 
     const postAndRefresh = (url, data, msg) => {
         $.post(url, data, function () {
@@ -82,51 +97,54 @@ document.addEventListener('DOMContentLoaded', function () {
 
         events: '../api/events/get_events.php',
 
-        // ================= ADD =================
-        dateClick: function (info) {
+dateClick: function (info) {
 
-            Swal.fire({
-                title: 'Add Event',
-                html: eventFormHTML({
-                    start: info.dateStr,
-                    end: info.dateStr
-                }),
-                showCancelButton: true,
-                confirmButtonText: 'Add',
-                confirmButtonColor: '#198754',
+    $.get('../api/events/get_users.php', function (users) {
 
-                preConfirm: () => {
-                    let data = getFormData();
-                    return validateEvent(data) && data;
-                }
+        Swal.fire({
+            title: 'Add Event',
+            html: eventFormHTML({
+                start: info.dateStr,
+                end: info.dateStr
+            }, users),
+            showCancelButton: true,
 
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    postAndRefresh('../api/events/add_event.php', result.value, 'Added!');
-                }
-            });
-        },
+            preConfirm: () => getFormData()
 
-        // ================= EDIT =================
-        eventClick: function (info) {
+        }).then((result) => {
+            if (result.isConfirmed) {
+                postAndRefresh('../api/events/add_event.php', result.value, 'Added!');
+            }
+        });
+
+    }, 'json'); // ✅ IMPORTANT
+},
+
+eventClick: function (info) {
+
+    // 1. Get all users
+    $.get('../api/events/get_users.php', function (allUsers) {
+
+        // 2. Get assigned users
+        $.get('../api/events/get_event_users.php', {
+            event_id: info.event.id
+        }, function (assignedUsers) {
 
             Swal.fire({
                 title: 'Edit Event',
                 html: eventFormHTML({
                     title: info.event.title,
                     start: formatDate(info.event.start),
-
-                    // ✔ FIX: correct FullCalendar end handling
                     end: info.event.end
                         ? formatDate(new Date(info.event.end.getTime() - 86400000))
-                        : formatDate(info.event.start)
-                }),
+                        : formatDate(info.event.start),
+                    users: assignedUsers
+                }, allUsers),
+
                 showCancelButton: true,
                 showDenyButton: true,
                 confirmButtonText: 'Update',
                 denyButtonText: 'Delete',
-                confirmButtonColor: '#ffc107',
-                denyButtonColor: '#dc3545',
 
                 preConfirm: () => {
                     let data = getFormData();
@@ -151,14 +169,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 }
             });
-        },
+
+        }, 'json');
+
+    }, 'json');
+},
 
 eventDrop: function (info) {
 
     let start = formatDate(info.event.start);
 
     let end = info.event.end
-        ? formatDate(new Date(info.event.end.getTime() - 86400000)) // ✅ subtract 1 day ONLY here
+        ? formatDate(new Date(info.event.end.getTime() - 86400000)) 
         : start;
 
     $.post('../api/events/update_event.php', {
@@ -176,7 +198,7 @@ eventResize: function (info) {
     let start = formatDate(info.event.start);
 
     let end = info.event.end
-        ? formatDate(new Date(info.event.end.getTime() - 86400000)) // ✅ same fix
+        ? formatDate(new Date(info.event.end.getTime() - 86400000)) 
         : start;
 
     $.post('../api/events/update_event.php', {
