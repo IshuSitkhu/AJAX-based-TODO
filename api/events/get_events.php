@@ -33,7 +33,6 @@ while ($row = mysqli_fetch_assoc($result)) {
     $start = $row['start'];
     $end = $row['end'];
 
-    // FullCalendar exclusive end fix
     if (!empty($end)) {
         $end = date('Y-m-d', strtotime($end . ' +1 day'));
     }
