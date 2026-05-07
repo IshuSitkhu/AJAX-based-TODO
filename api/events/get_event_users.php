@@ -12,7 +12,7 @@ $result = mysqli_query($conn, "
 $users = [];
 
 while ($row = mysqli_fetch_assoc($result)) {
-    $users[] = (string)$row['user_id']; // ✅ IMPORTANT (string)
+    $users[] = (string)$row['user_id']; 
 }
 
 echo json_encode($users);

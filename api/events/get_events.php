@@ -1,9 +1,30 @@
 <?php
 include '../../config/db.php';
+session_start();
 
 header('Content-Type: application/json');
 
-$result = mysqli_query($conn, "SELECT * FROM events");
+$user_id = $_SESSION['user_id'];
+$role = $_SESSION['role'];
+
+if ($role == 'admin') {
+
+    // Admin sees all events
+    $query = "SELECT * FROM events";
+
+} else {
+
+    // Staff sees only assigned events
+    $query = "
+        SELECT DISTINCT e.*
+        FROM events e
+        JOIN event_users eu 
+            ON e.id = eu.event_id
+        WHERE eu.user_id = '$user_id'
+    ";
+}
+
+$result = mysqli_query($conn, $query);
 
 $events = [];
 
@@ -12,6 +33,7 @@ while ($row = mysqli_fetch_assoc($result)) {
     $start = $row['start'];
     $end = $row['end'];
 
+    // FullCalendar exclusive end fix
     if (!empty($end)) {
         $end = date('Y-m-d', strtotime($end . ' +1 day'));
     }
