@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentEventId = null;
 
+    let currentUserId = window.CURRENT_USER_ID || null;
+
     const formatDate = (date) => {
         if (!date) return '';
 
@@ -32,25 +34,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const eventFormHTML = (
         data = {},
         users = [],
-        assignedUsers = []
+        assignedUsers = [],
+        eventType = 'admin'
     ) => {
 
         const assignedIds = assignedUsers.map(String);
 
-        // ONLY show users not already assigned
         const availableUsers = users.filter(u =>
             !assignedIds.includes(String(u.id))
         );
 
-        let options = availableUsers.map(u => {
-            return `
-                <option value="${u.id}">
-                    ${u.name}
-                </option>
-            `;
-        }).join('');
+        let options = availableUsers.map(u => `
+            <option value="${u.id}">
+                ${u.name}
+            </option>
+        `).join('');
 
-        // Assigned users section
         let assignedHTML = '';
 
         if (assignedUsers.length > 0) {
@@ -95,59 +94,38 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
         }
 
+        const isStaffEvent = eventType === 'staff';
+
         return `
             <div style="text-align:left;">
 
-                <label style="font-size:13px;">
-                    Event Title
-                </label>
+                <label style="font-size:13px;">Event Title</label>
 
                 <input 
                     id="title"
                     class="swal2-input"
                     value="${data.title || ''}"
-                    placeholder="Enter event title"
                 >
 
-                <div style="
-                    display:flex;
-                    gap:10px;
-                    margin-top:5px;
-                ">
+                <div style="display:flex;gap:10px;margin-top:5px;">
 
                     <div style="flex:1;">
-                        <label style="font-size:12px;">
-                            Start
-                        </label>
-
-                        <input
-                            id="start"
-                            type="date"
-                            class="form-control"
-                            value="${data.start || ''}"
-                        >
+                        <label style="font-size:12px;">Start</label>
+                        <input id="start" type="date" class="form-control"
+                            value="${data.start || ''}">
                     </div>
 
                     <div style="flex:1;">
-                        <label style="font-size:12px;">
-                            End
-                        </label>
-
-                        <input
-                            id="end"
-                            type="date"
-                            class="form-control"
-                            value="${data.end || ''}"
-                        >
+                        <label style="font-size:12px;">End</label>
+                        <input id="end" type="date" class="form-control"
+                            value="${data.end || ''}">
                     </div>
 
                 </div>
 
                 <hr>
 
-                <label>
-                    Assigned Users
-                </label>
+                <label>Assigned Users</label>
 
                 <div id="assignedBox">
                     ${assignedHTML}
@@ -155,18 +133,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 <hr>
 
-                <label>
-                    Add More Users
-                </label>
+                <label>Add More Users</label>
 
                 <select
                     id="users"
                     class="form-select"
                     multiple
                     size="5"
+                    ${isStaffEvent ? 'disabled' : ''}
                 >
                     ${options}
                 </select>
+
+                ${isStaffEvent
+                    ? `<small class="text-danger">
+                        User assignment disabled for staff events
+                       </small>`
+                    : ''
+                }
 
             </div>
         `;
@@ -189,9 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const postAndRefresh = (url, data, msg) => {
 
         $.post(url, data, function () {
-
             Swal.fire(msg, '', 'success');
-
             calendar.refetchEvents();
         });
     };
@@ -199,10 +181,8 @@ document.addEventListener('DOMContentLoaded', function () {
     window.removeUser = function (userId) {
 
         $.post('../api/events/remove_user.php', {
-
             event_id: currentEventId,
             user_id: userId
-
         }, function () {
 
             Swal.fire({
@@ -213,7 +193,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             calendar.refetchEvents();
-
             Swal.close();
         });
     };
@@ -221,18 +200,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const calendar = new FullCalendar.Calendar(calendarEl, {
 
         timeZone: 'local',
-
         initialView: 'dayGridMonth',
-
         displayEventTime: false,
-
         eventColor: "#0d6efd",
 
         editable: true,
-
-        eventStartEditable: true,
-
-        eventDurationEditable: true,
 
         events: '../api/events/get_events.php',
 
@@ -244,20 +216,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     title: 'Add Event',
 
-                    html: eventFormHTML({
-
-                        start: info.dateStr,
-                        end: info.dateStr,
-                        users: []
-
-                    }, users, []),
+                    html: eventFormHTML(
+                        {
+                            start: info.dateStr,
+                            end: info.dateStr,
+                            users: []
+                        },
+                        users,
+                        [],
+                        'admin'
+                    ),
 
                     showCancelButton: true,
 
                     preConfirm: () => {
-
                         let data = getFormData();
-
                         return validateEvent(data) && data;
                     }
 
@@ -280,10 +253,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             currentEventId = info.event.id;
 
-            // GET ALL USERS
+            const eventType = info.event.extendedProps?.event_type;
+            const isStaffEvent = eventType === 'staff';
+
             $.get('../api/events/get_users.php', function (allUsers) {
 
-                // GET ASSIGNED USERS
                 $.get('../api/events/get_event_users.php', {
 
                     event_id: info.event.id
@@ -294,42 +268,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         title: 'Edit Event',
 
-                        html: eventFormHTML({
-
-                            title: info.event.title,
-
-                            start: formatDate(info.event.start),
-
-                            end: info.event.end
-                                ? formatDate(
-                                    new Date(
-                                        info.event.end.getTime() - 86400000
-                                    )
-                                )
-                                : formatDate(info.event.start),
-
-                            users: assignedUsers
-
-                        }, allUsers, assignedUsers),
+                        html: eventFormHTML(
+                            {
+                                title: info.event.title,
+                                start: formatDate(info.event.start),
+                                end: info.event.end
+                                    ? formatDate(new Date(info.event.end.getTime() - 86400000))
+                                    : formatDate(info.event.start),
+                                users: assignedUsers
+                            },
+                            allUsers,
+                            assignedUsers,
+                            eventType
+                        ),
 
                         showCancelButton: true,
-
                         showDenyButton: true,
-
                         confirmButtonText: 'Update',
-
                         denyButtonText: 'Delete',
 
                         preConfirm: () => {
-
                             let data = getFormData();
-
                             return validateEvent(data) && data;
                         }
 
                     }).then((result) => {
 
-                        // UPDATE
                         if (result.isConfirmed) {
 
                             postAndRefresh(
@@ -342,51 +306,43 @@ document.addEventListener('DOMContentLoaded', function () {
                             );
                         }
 
-                        // DELETE
                         else if (result.isDenied) {
 
-                            $.post(
-                                '../api/events/delete_event.php',
-                                {
-                                    id: info.event.id
-                                },
-                                function () {
-
-                                    Swal.fire('Deleted!');
-
-                                    calendar.refetchEvents();
-                                }
-                            );
+                            $.post('../api/events/delete_event.php', {
+                                id: info.event.id
+                            }, function () {
+                                Swal.fire('Deleted!');
+                                calendar.refetchEvents();
+                            });
                         }
                     });
 
-                }, 'json');
+                });
 
-            }, 'json');
+            });
         },
 
         eventDrop: function (info) {
 
+            const eventType = info.event.extendedProps?.event_type;
+            const createdBy = info.event.extendedProps?.created_by;
+
+            if (eventType !== 'admin' && createdBy != currentUserId) {
+                info.revert();
+                return;
+            }
+
             let start = formatDate(info.event.start);
 
             let end = info.event.end
-                ? formatDate(
-                    new Date(
-                        info.event.end.getTime() - 86400000
-                    )
-                )
+                ? formatDate(new Date(info.event.end.getTime() - 86400000))
                 : start;
 
             $.post('../api/events/update_event.php', {
-
                 id: info.event.id,
-
                 title: info.event.title,
-
                 start: start,
-
                 end: end
-
             }).done(() => {
 
                 Swal.fire({
@@ -405,21 +361,13 @@ document.addEventListener('DOMContentLoaded', function () {
             let start = formatDate(info.event.start);
 
             let end = info.event.end
-                ? formatDate(
-                    new Date(
-                        info.event.end.getTime() - 86400000
-                    )
-                )
+                ? formatDate(new Date(info.event.end.getTime() - 86400000))
                 : start;
 
             $.post('../api/events/update_event.php', {
-
                 id: info.event.id,
-
                 title: info.event.title,
-
                 start: start,
-
                 end: end
             });
         }

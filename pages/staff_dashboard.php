@@ -26,6 +26,9 @@ if ($_SESSION['role'] != 'staff') {
     <script src="../assets/js/calendar.js"></script>
 
     <script src="../assets/js/staff.js"></script>
+    <script>
+    window.USER_ID = <?php echo $_SESSION['user_id']; ?>;
+</script>
 
     <style>
         body {
