@@ -3,7 +3,7 @@ include '../../config/db.php';
 
 header('Content-Type: application/json');
 
-$event_id = $_GET['event_id'];
+$event_id = intval($_GET['event_id']);
 
 $result = mysqli_query($conn, "
     SELECT user_id FROM event_users WHERE event_id=$event_id
@@ -12,7 +12,8 @@ $result = mysqli_query($conn, "
 $users = [];
 
 while ($row = mysqli_fetch_assoc($result)) {
-    $users[] = (string)$row['user_id']; 
+    $users[] = (string)$row['user_id'];
 }
 
 echo json_encode($users);
+?>

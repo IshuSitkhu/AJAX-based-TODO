@@ -12,35 +12,31 @@ mysqli_query($conn, "
     WHERE id=$id
 ");
 
-/*
-ONLY update users if users are sent
-drag/drop does not send users
-*/
-
 if (isset($_POST['users'])) {
 
     $users = $_POST['users'];
 
-    // remove old assigned users
-    mysqli_query($conn, "
-        DELETE FROM event_users
-        WHERE event_id=$id
-    ");
+    if (!is_array($users)) {
+        $users = [$users];
+    }
 
-    // insert selected users
-    if (!empty($users)) {
+    foreach ($users as $uid) {
 
-        foreach ($users as $uid) {
+        $uid = intval($uid);
+
+        if ($uid > 0) {
 
             mysqli_query($conn, "
                 INSERT INTO event_users (event_id, user_id)
-                VALUES ($id, $uid)
+                SELECT $id, $uid
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM event_users 
+                    WHERE event_id=$id AND user_id=$uid
+                )
             ");
         }
     }
 }
 
-echo json_encode([
-    "success" => true
-]);
+echo json_encode(["success" => true]);
 ?>

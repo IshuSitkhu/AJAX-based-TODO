@@ -8,18 +8,12 @@ $user_id = $_SESSION['user_id'];
 $role = $_SESSION['role'];
 
 if ($role == 'admin') {
-
-    // Admin sees all events
     $query = "SELECT * FROM events";
-
 } else {
-
-    // Staff sees only assigned events
     $query = "
         SELECT DISTINCT e.*
         FROM events e
-        JOIN event_users eu 
-            ON e.id = eu.event_id
+        JOIN event_users eu ON e.id = eu.event_id
         WHERE eu.user_id = '$user_id'
     ";
 }
@@ -30,7 +24,6 @@ $events = [];
 
 while ($row = mysqli_fetch_assoc($result)) {
 
-    $start = $row['start'];
     $end = $row['end'];
 
     if (!empty($end)) {
@@ -40,7 +33,7 @@ while ($row = mysqli_fetch_assoc($result)) {
     $events[] = [
         "id" => $row['id'],
         "title" => $row['title'],
-        "start" => $start,
+        "start" => $row['start'],
         "end" => $end
     ];
 }
