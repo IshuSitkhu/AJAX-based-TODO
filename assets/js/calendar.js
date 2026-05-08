@@ -268,19 +268,45 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         title: 'Edit Event',
 
-                        html: eventFormHTML(
-                            {
-                                title: info.event.title,
-                                start: formatDate(info.event.start),
-                                end: info.event.end
-                                    ? formatDate(new Date(info.event.end.getTime() - 86400000))
-                                    : formatDate(info.event.start),
-                                users: assignedUsers
-                            },
-                            allUsers,
-                            assignedUsers,
-                            eventType
-                        ),
+                        html: `
+    ${
+        isStaffEvent
+        ? `
+            <div style="
+    text-align:left;
+    margin-bottom:12px;
+    padding:8px 12px;
+    background:#f8f9fa;
+    border-left:4px solid #0d6efd;
+    border-radius:8px;
+    font-size:24px;
+">
+    <small style="
+        color:#0d6efd;
+        font-weight:600;
+        letter-spacing:0.3px;
+    ">
+        Created By: ${info.event.extendedProps?.created_by_name || 'Unknown'}
+    </small>
+</div>
+        `
+        : ''
+    }
+
+    ${eventFormHTML(
+        {
+            title: info.event.title,
+            start: formatDate(info.event.start),
+            end: info.event.end
+                ? formatDate(new Date(info.event.end.getTime() - 86400000))
+                : formatDate(info.event.start),
+            users: assignedUsers
+        },
+        allUsers,
+        assignedUsers,
+        eventType
+    )}
+`,
 
                         showCancelButton: true,
                         showDenyButton: true,
