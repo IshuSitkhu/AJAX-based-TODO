@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 06, 2026 at 11:43 AM
+-- Generation Time: May 08, 2026 at 04:46 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -57,16 +57,20 @@ CREATE TABLE `events` (
   `title` varchar(255) DEFAULT NULL,
   `start` date DEFAULT NULL,
   `end` date DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `created_by` int(11) DEFAULT NULL,
+  `event_type` varchar(20) DEFAULT 'admin'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `events`
 --
 
-INSERT INTO `events` (`id`, `title`, `start`, `end`, `created_at`) VALUES
-(42, 'GANESHA SCHOOL PROGRAM', '2026-05-17', '2026-05-23', '2026-05-06 08:53:09'),
-(43, 'KRISHNA JANMASTAMI', '2026-05-07', '2026-05-07', '2026-05-06 09:22:25');
+INSERT INTO `events` (`id`, `title`, `start`, `end`, `created_at`, `created_by`, `event_type`) VALUES
+(103, 'MEETING', '2026-05-08', '2026-05-08', '2026-05-07 17:50:48', 1, 'admin'),
+(104, 'SEE PROGRAM', '2026-05-17', '2026-05-20', '2026-05-07 17:51:09', 1, 'admin'),
+(105, 'VIVA PREP', '2026-05-15', '2026-05-15', '2026-05-07 17:51:49', 8, 'staff'),
+(107, 'MAKING NOTES', '2026-05-27', '2026-05-27', '2026-05-08 02:44:09', 8, 'staff');
 
 -- --------------------------------------------------------
 
@@ -79,6 +83,15 @@ CREATE TABLE `event_users` (
   `event_id` int(11) DEFAULT NULL,
   `user_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `event_users`
+--
+
+INSERT INTO `event_users` (`id`, `event_id`, `user_id`) VALUES
+(106, 104, 25),
+(107, 104, 7),
+(108, 104, 8);
 
 -- --------------------------------------------------------
 
@@ -293,13 +306,13 @@ ALTER TABLE `email_queue`
 -- AUTO_INCREMENT for table `events`
 --
 ALTER TABLE `events`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
 
 --
 -- AUTO_INCREMENT for table `event_users`
 --
 ALTER TABLE `event_users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=109;
 
 --
 -- AUTO_INCREMENT for table `projects`
